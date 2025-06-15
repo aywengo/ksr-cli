@@ -20,7 +20,6 @@ jobs:
       uses: actions/setup-go@v5
       with:
         go-version: '1.21'
-        cache: false
     
     # Fix: Run go mod tidy to ensure go.sum is up to date
     - name: Tidy modules
@@ -34,14 +33,11 @@ jobs:
     - name: Run tests
       run: go test -v ./...
     
-    - name: Run linting
-      uses: golangci/golangci-lint-action@v3
-      with:
-        version: v1.54.2
-        args: --timeout=5m
-        skip-cache: true
-        skip-build-cache: true
-        skip-pkg-cache: true
+    # Run golangci-lint manually to avoid version conflicts
+    - name: Install and run golangci-lint
+      run: |
+        curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.54.2
+        $(go env GOPATH)/bin/golangci-lint run --timeout=5m
 
   build:
     needs: test
@@ -77,7 +73,6 @@ jobs:
       uses: actions/setup-go@v5
       with:
         go-version: '1.21'
-        cache: false
     
     # Fix: Ensure dependencies are resolved before building
     - name: Tidy modules
