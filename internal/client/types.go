@@ -4,12 +4,12 @@ import "encoding/json"
 
 // Schema represents a schema in the Schema Registry
 type Schema struct {
-	ID       int             `json:"id"`
-	Version  int             `json:"version"`
-	Schema   json.RawMessage `json:"schema"`
-	Subject  string          `json:"subject"`
-	Type     string          `json:"schemaType,omitempty"`
-	References []Reference   `json:"references,omitempty"`
+	ID         int             `json:"id"`
+	Version    int             `json:"version"`
+	Schema     json.RawMessage `json:"schema"`
+	Subject    string          `json:"subject"`
+	Type       string          `json:"schemaType,omitempty"`
+	References []Reference     `json:"references,omitempty"`
 }
 
 // Reference represents a schema reference
@@ -39,14 +39,14 @@ type CompatibilityResponse struct {
 
 // Config represents Schema Registry configuration
 type Config struct {
-	Compatibility              string `json:"compatibility,omitempty"`
-	CompatibilityLevel         string `json:"compatibilityLevel,omitempty"`
-	Alias                      string `json:"alias,omitempty"`
-	Normalize                  bool   `json:"normalize,omitempty"`
-	DefaultToGlobalConfig      bool   `json:"defaultToGlobalConfig,omitempty"`
-	ValidateFields             bool   `json:"validateFields,omitempty"`
-	UseLatestVersion           bool   `json:"useLatestVersion,omitempty"`
-	UseSchemasFromLatestSubject bool   `json:"useSchemasFromLatestSubject,omitempty"`
+	Compatibility                string `json:"compatibility,omitempty"`
+	CompatibilityLevel           string `json:"compatibilityLevel,omitempty"`
+	Alias                        string `json:"alias,omitempty"`
+	Normalize                    bool   `json:"normalize,omitempty"`
+	DefaultToGlobalConfig        bool   `json:"defaultToGlobalConfig,omitempty"`
+	ValidateFields               bool   `json:"validateFields,omitempty"`
+	UseLatestVersion             bool   `json:"useLatestVersion,omitempty"`
+	UseSchemasFromLatestSubject  bool   `json:"useSchemasFromLatestSubject,omitempty"`
 }
 
 // ErrorResponse represents an error response from the Schema Registry
@@ -57,8 +57,8 @@ type ErrorResponse struct {
 
 // Subject represents a subject with metadata
 type Subject struct {
-	Name     string `json:"name"`
-	Versions []int  `json:"versions,omitempty"`
+	Name     string  `json:"name"`
+	Versions []int   `json:"versions,omitempty"`
 	Latest   *Schema `json:"latest,omitempty"`
 }
 
@@ -88,8 +88,8 @@ type SubjectVersion struct {
 
 // SchemaRegistryInfo represents information about the Schema Registry instance
 type SchemaRegistryInfo struct {
-	Version   string   `json:"version"`
-	Commit    string   `json:"commit"`
+	Version        string `json:"version"`
+	Commit         string `json:"commit"`
 	KafkaClusterID string `json:"kafka_cluster_id,omitempty"`
 }
 
@@ -102,13 +102,13 @@ type SchemaString struct {
 type CompatibilityLevel string
 
 const (
-	CompatibilityNone            CompatibilityLevel = "NONE"
-	CompatibilityBackward        CompatibilityLevel = "BACKWARD"
+	CompatibilityNone               CompatibilityLevel = "NONE"
+	CompatibilityBackward           CompatibilityLevel = "BACKWARD"
 	CompatibilityBackwardTransitive CompatibilityLevel = "BACKWARD_TRANSITIVE"
-	CompatibilityForward         CompatibilityLevel = "FORWARD"
-	CompatibilityForwardTransitive CompatibilityLevel = "FORWARD_TRANSITIVE"
-	CompatibilityFull           CompatibilityLevel = "FULL"
-	CompatibilityFullTransitive CompatibilityLevel = "FULL_TRANSITIVE"
+	CompatibilityForward            CompatibilityLevel = "FORWARD"
+	CompatibilityForwardTransitive  CompatibilityLevel = "FORWARD_TRANSITIVE"
+	CompatibilityFull               CompatibilityLevel = "FULL"
+	CompatibilityFullTransitive     CompatibilityLevel = "FULL_TRANSITIVE"
 )
 
 // SchemaType represents the different schema types supported
