@@ -1,0 +1,27 @@
+Source: ksr-cli
+Section: utils
+Priority: optional
+Maintainer: Aywen Go <aywengo@gmail.com>
+Build-Depends: debhelper (>= 9), golang-go (>= 2:1.21)
+Standards-Version: 4.5.0
+Homepage: https://github.com/aywengo/ksr-cli
+Vcs-Git: https://github.com/aywengo/ksr-cli.git
+Vcs-Browser: https://github.com/aywengo/ksr-cli
+
+Package: ksr-cli
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: CLI tool for Kafka Schema Registry
+ ksr-cli is a comprehensive command-line interface for managing
+ Kafka Schema Registry. It provides commands to get, create, delete,
+ and manage schemas, subjects, and configurations.
+ .
+ Features:
+  * Cross-platform support (Linux, macOS, Windows)
+  * JSON/YAML output formats
+  * Configuration file support
+  * Shell completion (bash/zsh/fish)
+  * Authentication support
+  * Comprehensive error handling
+ .
+ This package contains the ksr-cli binary and supporting files.
