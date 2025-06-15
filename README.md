@@ -50,7 +50,7 @@ Download the appropriate binary for your platform from the [releases page](https
 
 ```bash
 # Download and install (replace with actual version and platform)
-curl -LO https://github.com/aywengo/ksr-cli/releases/download/v1.0.0/ksr-cli-linux-amd64.tar.gz
+curl -LO https://github.com/aywengo/ksr-cli/releases/download/v0.1.0/ksr-cli-linux-amd64.tar.gz
 tar xzf ksr-cli-linux-amd64.tar.gz
 sudo mv ksr-cli /usr/local/bin/
 ```

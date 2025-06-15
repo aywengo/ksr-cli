@@ -1,20 +1,20 @@
 class KsrCli < Formula
   desc "CLI tool for Kafka Schema Registry"
   homepage "https://github.com/aywengo/ksr-cli"
-  url "https://github.com/aywengo/ksr-cli/releases/download/v1.0.0/ksr-cli-darwin-amd64.tar.gz"
+  url "https://github.com/aywengo/ksr-cli/releases/download/v0.1.0/ksr-cli-darwin-amd64.tar.gz"
   sha256 "SHA256_PLACEHOLDER"
   license "MIT"
-  version "1.0.0"
+  version "0.1.0"
 
   depends_on "go" => :build
 
   on_macos do
     if Hardware::CPU.intel?
-      url "https://github.com/aywengo/ksr-cli/releases/download/v1.0.0/ksr-cli-darwin-amd64.tar.gz"
+      url "https://github.com/aywengo/ksr-cli/releases/download/v0.1.0/ksr-cli-darwin-amd64.tar.gz"
       sha256 "AMD64_SHA256_PLACEHOLDER"
     end
     if Hardware::CPU.arm?
-      url "https://github.com/aywengo/ksr-cli/releases/download/v1.0.0/ksr-cli-darwin-arm64.tar.gz"
+      url "https://github.com/aywengo/ksr-cli/releases/download/v0.1.0/ksr-cli-darwin-arm64.tar.gz"
       sha256 "ARM64_SHA256_PLACEHOLDER"
     end
   end

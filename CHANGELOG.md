@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.0.0] - 2025-06-15
+## [0.1.0] - 2024-12-19
 
 ### Added
 - Initial release of ksr-cli
@@ -57,5 +57,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Binary releases for multiple platforms
 - Automated CI/CD with GitHub Actions
 
-[Unreleased]: https://github.com/aywengo/ksr-cli/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/aywengo/ksr-cli/releases/tag/v1.0.0
+[Unreleased]: https://github.com/aywengo/ksr-cli/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/aywengo/ksr-cli/releases/tag/v0.1.0
