@@ -1,0 +1,68 @@
+{
+  "type": "record",
+  "name": "Order",
+  "namespace": "com.example",
+  "fields": [
+    {
+      "name": "order_id",
+      "type": "string",
+      "doc": "Unique order identifier"
+    },
+    {
+      "name": "user_id",
+      "type": "long",
+      "doc": "ID of the user who placed the order"
+    },
+    {
+      "name": "status",
+      "type": {
+        "type": "enum",
+        "name": "OrderStatus",
+        "symbols": ["PENDING", "PROCESSING", "SHIPPED", "DELIVERED", "CANCELLED"]
+      },
+      "doc": "Current order status"
+    },
+    {
+      "name": "items",
+      "type": {
+        "type": "array",
+        "items": {
+          "type": "record",
+          "name": "OrderItem",
+          "fields": [
+            {
+              "name": "product_id",
+              "type": "string"
+            },
+            {
+              "name": "quantity",
+              "type": "int"
+            },
+            {
+              "name": "price",
+              "type": "double"
+            }
+          ]
+        }
+      },
+      "doc": "List of items in the order"
+    },
+    {
+      "name": "total_amount",
+      "type": "double",
+      "doc": "Total order amount"
+    },
+    {
+      "name": "created_at",
+      "type": "long",
+      "logicalType": "timestamp-millis",
+      "doc": "Order creation timestamp"
+    },
+    {
+      "name": "shipping_address",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "Shipping address for the order"
+    }
+  ]
+}
