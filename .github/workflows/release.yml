@@ -111,8 +111,10 @@ jobs:
         GOOS: ${{ matrix.goos }}
         GOARCH: ${{ matrix.goarch }}
         VERSION: ${{ steps.version.outputs.VERSION }}
+        BUILD_TIME: $(date -u +%Y-%m-%dT%H:%M:%SZ)
       run: |
-        go build -ldflags "-X main.Version=$VERSION -X main.BuildTime=$(date +%FT%T%z) -s -w" -o ${{ matrix.artifact_name }} .
+        BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+        go build -ldflags "-X main.Version=$VERSION -X main.BuildTime=$BUILD_TIME -s -w" -o ${{ matrix.artifact_name }} .
     
     - name: Upload artifact
       uses: actions/upload-artifact@v4
@@ -314,13 +316,10 @@ jobs:
           
           def install
             bin.install "ksr-cli"
-            
-            # Generate completions
-            generate_completions_from_executable(bin/"ksr-cli", "completion")
           end
           
           test do
-            system "#{bin}/ksr-cli", "help"
+            system "#{bin}/ksr-cli", "--help"
           end
         end
         EOF
