@@ -39,14 +39,14 @@ type CompatibilityResponse struct {
 
 // Config represents Schema Registry configuration
 type Config struct {
-	Compatibility                string `json:"compatibility,omitempty"`
-	CompatibilityLevel           string `json:"compatibilityLevel,omitempty"`
-	Alias                        string `json:"alias,omitempty"`
-	Normalize                    bool   `json:"normalize,omitempty"`
-	DefaultToGlobalConfig        bool   `json:"defaultToGlobalConfig,omitempty"`
-	ValidateFields               bool   `json:"validateFields,omitempty"`
-	UseLatestVersion             bool   `json:"useLatestVersion,omitempty"`
-	UseSchemasFromLatestSubject  bool   `json:"useSchemasFromLatestSubject,omitempty"`
+	Compatibility               string `json:"compatibility,omitempty"`
+	CompatibilityLevel          string `json:"compatibilityLevel,omitempty"`
+	Alias                       string `json:"alias,omitempty"`
+	Normalize                   bool   `json:"normalize,omitempty"`
+	DefaultToGlobalConfig       bool   `json:"defaultToGlobalConfig,omitempty"`
+	ValidateFields              bool   `json:"validateFields,omitempty"`
+	UseLatestVersion            bool   `json:"useLatestVersion,omitempty"`
+	UseSchemasFromLatestSubject bool   `json:"useSchemasFromLatestSubject,omitempty"`
 }
 
 // ErrorResponse represents an error response from the Schema Registry
