@@ -114,7 +114,8 @@ jobs:
         BUILD_TIME: $(date -u +%Y-%m-%dT%H:%M:%SZ)
       run: |
         BUILD_TIME=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-        go build -ldflags "-X main.Version=$VERSION -X main.BuildTime=$BUILD_TIME -s -w" -o ${{ matrix.artifact_name }} .
+        # Fixed: Use proper ldflags syntax with quotes and pass to cmd package variables
+        go build -ldflags "-X 'main.Version=$VERSION' -X 'main.BuildTime=$BUILD_TIME' -X 'github.com/aywengo/ksr-cli/cmd.Version=$VERSION' -X 'github.com/aywengo/ksr-cli/cmd.BuildTime=$BUILD_TIME' -s -w" -o ${{ matrix.artifact_name }} .
     
     - name: Upload artifact
       uses: actions/upload-artifact@v4
