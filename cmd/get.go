@@ -170,6 +170,48 @@ Examples:
 	},
 }
 
+var getModeCmd = &cobra.Command{
+	Use:   "mode [SUBJECT]",
+	Short: "Get mode configuration",
+	Long: `Get global mode or mode for a specific subject.
+
+The mode controls the behavior of the Schema Registry:
+- READWRITE: Normal operation (default)
+- READONLY: Only read operations are allowed
+- IMPORT: Schema Registry is in import mode
+
+Examples:
+  ksr-cli get mode           # Get global mode
+  ksr-cli get mode my-subject # Get subject-specific mode`,
+	Args: cobra.MaximumNArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		c, err := client.NewClient()
+		if err != nil {
+			return fmt.Errorf("failed to create client: %w", err)
+		}
+
+		effectiveContext := config.GetEffectiveContext(context)
+
+		if len(args) == 0 {
+			// Get global mode
+			mode, err := c.GetGlobalMode(effectiveContext)
+			if err != nil {
+				return fmt.Errorf("failed to get global mode: %w", err)
+			}
+			return output.Print(mode, outputFormat)
+		}
+
+		// Get subject mode
+		subject := args[0]
+		mode, err := c.GetSubjectMode(subject, effectiveContext)
+		if err != nil {
+			return fmt.Errorf("failed to get mode for subject %s: %w", subject, err)
+		}
+
+		return output.Print(mode, outputFormat)
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(getCmd)
 
@@ -178,6 +220,7 @@ func init() {
 	getCmd.AddCommand(getSubjectsCmd)
 	getCmd.AddCommand(getVersionsCmd)
 	getCmd.AddCommand(getConfigCmd)
+	getCmd.AddCommand(getModeCmd)
 
 	// Flags for schemas command
 	getSchemasCmd.Flags().StringVarP(&version, "version", "V", "", "Schema version")

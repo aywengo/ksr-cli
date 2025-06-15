@@ -14,7 +14,7 @@ TOTAL_TESTS=0
 PASSED_TESTS=0
 FAILED_TESTS=0
 
-# Array of test suites
+# Array of test suites  
 TEST_SUITES=(
     "test_basic.sh"
     "test_create_commands.sh"
@@ -23,6 +23,7 @@ TEST_SUITES=(
     "test_config_commands.sh"
     "test_context_operations.sh"
     "test_schema_evolution.sh"
+    "test_mode_commands.sh"
 )
 
 echo -e "${CYAN}========================================${NC}"

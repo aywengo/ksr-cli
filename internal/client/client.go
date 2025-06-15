@@ -305,6 +305,108 @@ func (c *Client) DeleteSubject(subject, context string, permanent bool) ([]int, 
 	return versions, nil
 }
 
+// GetGlobalMode returns the global mode of the Schema Registry
+func (c *Client) GetGlobalMode(context string) (*Mode, error) {
+	path := "/mode"
+	if context != "" {
+		path += "?context=" + url.QueryEscape(context)
+	}
+
+	resp, err := c.makeRequest("GET", path, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, c.handleError(resp)
+	}
+
+	var mode Mode
+	if err := json.NewDecoder(resp.Body).Decode(&mode); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return &mode, nil
+}
+
+// SetGlobalMode sets the global mode of the Schema Registry
+func (c *Client) SetGlobalMode(mode string, context string) (*Mode, error) {
+	path := "/mode"
+	if context != "" {
+		path += "?context=" + url.QueryEscape(context)
+	}
+
+	modeRequest := Mode{Mode: mode}
+	resp, err := c.makeRequest("PUT", path, modeRequest)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, c.handleError(resp)
+	}
+
+	var result Mode
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return &result, nil
+}
+
+// GetSubjectMode returns the mode for a specific subject
+func (c *Client) GetSubjectMode(subject, context string) (*Mode, error) {
+	path := fmt.Sprintf("/mode/%s", url.PathEscape(subject))
+	if context != "" {
+		path += "?context=" + url.QueryEscape(context)
+	}
+
+	resp, err := c.makeRequest("GET", path, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, c.handleError(resp)
+	}
+
+	var mode Mode
+	if err := json.NewDecoder(resp.Body).Decode(&mode); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return &mode, nil
+}
+
+// SetSubjectMode sets the mode for a specific subject
+func (c *Client) SetSubjectMode(subject, mode, context string) (*Mode, error) {
+	path := fmt.Sprintf("/mode/%s", url.PathEscape(subject))
+	if context != "" {
+		path += "?context=" + url.QueryEscape(context)
+	}
+
+	modeRequest := Mode{Mode: mode}
+	resp, err := c.makeRequest("PUT", path, modeRequest)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, c.handleError(resp)
+	}
+
+	var result Mode
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return &result, nil
+}
+
 // handleError processes error responses from the Schema Registry
 func (c *Client) handleError(resp *http.Response) error {
 	body, err := io.ReadAll(resp.Body)

@@ -87,6 +87,26 @@ make build
 
 ## Usage
 
+### Available Commands
+
+**Schema Operations:**
+- `ksr-cli get subjects` - List all subjects
+- `ksr-cli get schemas [SUBJECT]` - Get schemas
+- `ksr-cli get versions SUBJECT` - Get versions for a subject
+- `ksr-cli create schema SUBJECT` - Register a new schema
+- `ksr-cli check compatibility SUBJECT` - Check schema compatibility
+
+**Configuration Management:**
+- `ksr-cli get config [SUBJECT]` - Get configuration
+- `ksr-cli config set KEY VALUE` - Set CLI configuration
+
+**Mode Management:**
+- `ksr-cli get mode [SUBJECT]` - Get mode configuration
+- `ksr-cli set mode [SUBJECT] MODE` - Set mode configuration
+
+**Context Operations:**
+- All commands support `--context` flag for multi-tenant environments
+
 ### Configuration
 
 ksr-cli uses a configuration file to store connection details and preferences. The configuration file is located at `~/.ksr-cli.yaml` by default.
@@ -165,6 +185,32 @@ ksr-cli get config
 # Get subject-specific configuration
 ksr-cli get config my-subject
 ```
+
+### Mode Management
+
+Schema Registry supports different modes that control its behavior:
+
+```bash
+# Get global mode
+ksr-cli get mode
+
+# Get subject-specific mode
+ksr-cli get mode my-subject
+
+# Set global mode
+ksr-cli set mode READWRITE
+ksr-cli set mode READONLY
+ksr-cli set mode IMPORT
+
+# Set subject-specific mode
+ksr-cli set mode my-subject READWRITE
+ksr-cli set mode my-subject READONLY
+```
+
+**Available Modes:**
+- **READWRITE**: Normal operation (default) - allows all operations
+- **READONLY**: Only read operations are allowed - no schema registration or updates
+- **IMPORT**: Schema Registry is in import mode - allows importing schemas with specific IDs
 
 ### Context Support
 

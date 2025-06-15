@@ -25,6 +25,8 @@ Examples:
   ksr-cli create schema my-subject -f schema.avsc  # Register new schema
   ksr-cli check compatibility my-subject -f new.avsc  # Check compatibility
   ksr-cli config set registry-url http://localhost:8081  # Configure registry URL
+  ksr-cli get mode                               # Get global mode
+  ksr-cli set mode READONLY                      # Set global mode to read-only
 
 Configuration:
   Use 'ksr-cli config' commands to manage your CLI configuration including
