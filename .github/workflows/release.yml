@@ -17,21 +17,16 @@ jobs:
     - uses: actions/checkout@v4
     
     - name: Set up Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
         go-version: '1.21'
-    
-    - name: Cache Go modules
-      uses: actions/cache@v3
-      with:
-        path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
+        cache: false
     
     # Fix: Run go mod tidy to ensure go.sum is up to date
     - name: Tidy modules
-      run: go mod tidy
+      run: |
+        go mod tidy
+        go mod verify
     
     - name: Download dependencies
       run: go mod download
@@ -44,6 +39,9 @@ jobs:
       with:
         version: v1.54.2
         args: --timeout=5m
+        skip-cache: true
+        skip-build-cache: true
+        skip-pkg-cache: true
 
   build:
     needs: test
@@ -76,9 +74,10 @@ jobs:
     - uses: actions/checkout@v4
     
     - name: Set up Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v5
       with:
         go-version: '1.21'
+        cache: false
     
     # Fix: Ensure dependencies are resolved before building
     - name: Tidy modules
@@ -172,7 +171,7 @@ jobs:
         EOF
           
           # Create bash completion
-          ./bin/$arch/ksr-cli completion bash > packaging/deb-$arch/ksr-cli-${{ steps.version.outputs.VERSION }}/etc/bash_completion.d/ksr-cli
+          ./bin/$arch/ksr-cli completion bash > packaging/deb-$arch/ksr-cli-${{ steps.version.outputs.VERSION }}/etc/bash_completion.d/ksr-cli || true
           
           # Build package
           dpkg-deb --build packaging/deb-$arch/ksr-cli-${{ steps.version.outputs.VERSION }}
@@ -284,7 +283,7 @@ jobs:
     - name: Generate checksums
       run: |
         sha256sum *.tar.gz > checksums.txt
-        sha256sum deb-packages/*.deb >> checksums.txt
+        sha256sum deb-packages/*.deb >> checksums.txt || true
     
     - name: Create Release
       uses: softprops/action-gh-release@v1
