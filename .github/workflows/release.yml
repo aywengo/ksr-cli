@@ -6,6 +6,12 @@ on:
       - 'v*'
   workflow_dispatch:
 
+# Add explicit permissions
+permissions:
+  contents: write
+  packages: write
+  actions: read
+
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
@@ -252,6 +258,8 @@ jobs:
     needs: [build, package-deb, homebrew-formula]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
     steps:
     - uses: actions/checkout@v4
     
@@ -317,5 +325,4 @@ jobs:
           Download the appropriate binary for your platform from the assets below.
         draft: false
         prerelease: false
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.GITHUB_TOKEN }}
