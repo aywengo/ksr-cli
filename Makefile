@@ -29,6 +29,8 @@ all: clean deps test build
 
 # Build for current platform
 build:
+	@echo "Tidying modules..."
+	$(GOMOD) tidy
 	@echo "Building $(BINARY_NAME) for current platform..."
 	$(GOBUILD) $(LDFLAGS) -o $(BUILD_DIR)/$(BINARY_NAME) .
 
@@ -41,6 +43,8 @@ clean:
 
 # Run tests
 test:
+	@echo "Tidying modules..."
+	$(GOMOD) tidy
 	@echo "Running tests..."
 	$(GOTEST) -v ./...
 
@@ -73,6 +77,8 @@ vet:
 
 # Cross-compile for all platforms
 build-all: clean
+	@echo "Tidying modules..."
+	$(GOMOD) tidy
 	@echo "Building for all platforms..."
 	@mkdir -p $(DIST_DIR)
 	@for platform in $(PLATFORMS); do \
