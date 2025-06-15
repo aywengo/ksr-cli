@@ -49,10 +49,6 @@ func TestClient_GetGlobalMode(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				// Verify the request path and method
-				expectedPath := "/mode"
-				if tt.context != "" {
-					expectedPath += "?context=" + url.QueryEscape(tt.context)
-				}
 				if r.URL.Path != "/mode" {
 					t.Errorf("Expected path /mode, got %s", r.URL.Path)
 				}
@@ -64,7 +60,9 @@ func TestClient_GetGlobalMode(t *testing.T) {
 				}
 
 				w.WriteHeader(tt.responseStatus)
-				w.Write([]byte(tt.responseBody))
+				if _, err := w.Write([]byte(tt.responseBody)); err != nil {
+					t.Errorf("Failed to write response: %v", err)
+				}
 			}))
 			defer server.Close()
 
@@ -160,7 +158,9 @@ func TestClient_SetGlobalMode(t *testing.T) {
 				}
 
 				w.WriteHeader(tt.responseStatus)
-				w.Write([]byte(tt.responseBody))
+				if _, err := w.Write([]byte(tt.responseBody)); err != nil {
+					t.Errorf("Failed to write response: %v", err)
+				}
 			}))
 			defer server.Close()
 
@@ -248,7 +248,9 @@ func TestClient_GetSubjectMode(t *testing.T) {
 				}
 
 				w.WriteHeader(tt.responseStatus)
-				w.Write([]byte(tt.responseBody))
+				if _, err := w.Write([]byte(tt.responseBody)); err != nil {
+					t.Errorf("Failed to write response: %v", err)
+				}
 			}))
 			defer server.Close()
 
@@ -349,7 +351,9 @@ func TestClient_SetSubjectMode(t *testing.T) {
 				}
 
 				w.WriteHeader(tt.responseStatus)
-				w.Write([]byte(tt.responseBody))
+				if _, err := w.Write([]byte(tt.responseBody)); err != nil {
+					t.Errorf("Failed to write response: %v", err)
+				}
 			}))
 			defer server.Close()
 
