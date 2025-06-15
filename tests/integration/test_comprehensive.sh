@@ -24,6 +24,10 @@ TEST_SUITES=(
     "test_context_operations.sh"
     "test_schema_evolution.sh"
     "test_mode_commands.sh"
+    "test_export_commands.sh"
+    "test_import_commands.sh"
+    "test_import_export_integration.sh"
+    "test_all_versions_flag.sh"
 )
 
 echo -e "${CYAN}========================================${NC}"

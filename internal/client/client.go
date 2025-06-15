@@ -273,6 +273,56 @@ func (c *Client) GetSubjectConfig(subject, context string) (*Config, error) {
 	return &config, nil
 }
 
+// SetGlobalConfig sets global configuration
+func (c *Client) SetGlobalConfig(config *Config, context string) (*Config, error) {
+	path := "/config"
+	if context != "" {
+		path += "?context=" + url.QueryEscape(context)
+	}
+
+	resp, err := c.makeRequest("PUT", path, config)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, c.handleError(resp)
+	}
+
+	var result Config
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return &result, nil
+}
+
+// SetSubjectConfig sets configuration for a specific subject
+func (c *Client) SetSubjectConfig(subject string, config *Config, context string) (*Config, error) {
+	path := fmt.Sprintf("/config/%s", url.PathEscape(subject))
+	if context != "" {
+		path += "?context=" + url.QueryEscape(context)
+	}
+
+	resp, err := c.makeRequest("PUT", path, config)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, c.handleError(resp)
+	}
+
+	var result Config
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return &result, nil
+}
+
 // DeleteSubject deletes a subject
 func (c *Client) DeleteSubject(subject, context string, permanent bool) ([]int, error) {
 	path := fmt.Sprintf("/subjects/%s", url.PathEscape(subject))

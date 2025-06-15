@@ -33,9 +33,16 @@ bash test_check_commands.sh
 bash test_config_commands.sh
 bash test_context_operations.sh
 bash test_schema_evolution.sh
+bash test_export_commands.sh
+bash test_import_commands.sh
+bash test_import_export_integration.sh
+bash test_all_versions_flag.sh
 
 # Or run all test suites together
 bash test_comprehensive.sh
+
+# Run just the import/export tests
+bash ../run-import-export-tests.sh
 
 # Stop test environment when done
 ./tests/stop-test-env.sh
@@ -162,6 +169,41 @@ The integration tests validate:
 - Version-specific operations
 - Multiple evolution steps
 - Complex schema type evolution
+
+**tests/integration/test_export_commands.sh:**
+- Subject and schema export functionality
+- Export to stdout, files, and directories
+- Export with and without all versions
+- Export format validation (JSON, YAML)
+- Export metadata and configuration inclusion
+- Context-specific exports
+- Error handling for non-existent subjects
+
+**tests/integration/test_import_commands.sh:**
+- Subject and schema import functionality
+- Import from files and directories
+- Dry-run import validation
+- Skip existing and force import options
+- Cross-context import operations
+- Import error handling and recovery
+- Import summary validation
+
+**tests/integration/test_import_export_integration.sh:**
+- End-to-end backup and restore workflows
+- Cross-context migration scenarios
+- Export-import roundtrip data integrity
+- Bulk operations and performance testing
+- Error recovery and partial imports
+- Configuration preservation during migration
+- Directory-based backup strategies
+
+**tests/integration/test_all_versions_flag.sh:**
+- --all-versions flag functionality across commands
+- Backward compatibility with --all flag
+- Version count validation
+- Export format compatibility with version flags
+- JSON structure validation for multi-version exports
+- Help documentation validation
 
 **tests/integration/test_comprehensive.sh:**
 - Orchestrates all individual test suites

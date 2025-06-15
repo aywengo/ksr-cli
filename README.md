@@ -16,6 +16,7 @@ A comprehensive command-line interface for managing Kafka Schema Registry. Built
 - ✅ **Authentication support** - Basic auth and API key authentication
 - ✅ **Schema operations** - Get, create, delete, and manage schemas
 - ✅ **Compatibility checking** - Validate schema compatibility
+- ✅ **Import/Export functionality** - Backup, migrate, and synchronize Schema Registry instances
 - ✅ **Context-aware operations** - Multi-tenant Schema Registry support with configurable default context
 - ✅ **Integration testing** - Comprehensive test suite with Docker-based test environment
 - ✅ **Package distribution** - Available via Homebrew and APT repositories
@@ -96,6 +97,12 @@ make build
 - `ksr-cli create schema SUBJECT` - Register a new schema
 - `ksr-cli check compatibility SUBJECT` - Check schema compatibility
 
+**Import/Export Operations:**
+- `ksr-cli export subjects` - Export all subjects and schemas
+- `ksr-cli export subject SUBJECT` - Export a specific subject
+- `ksr-cli import subjects` - Import subjects and schemas from file
+- `ksr-cli import subject` - Import a specific subject from file
+
 **Configuration Management:**
 - `ksr-cli get config [SUBJECT]` - Get configuration
 - `ksr-cli config set KEY VALUE` - Set CLI configuration
@@ -145,6 +152,7 @@ ksr-cli get schemas my-subject --version 2
 
 # Get all versions of a schema
 ksr-cli get schemas my-subject --all
+ksr-cli get schemas my-subject --all-versions
 
 # Get all versions for a subject
 ksr-cli get versions my-subject
@@ -174,6 +182,123 @@ ksr-cli check compatibility my-subject --file new-schema.avsc
 
 # Check compatibility with inline schema
 ksr-cli check compatibility my-subject --schema '{"type":"string"}'
+```
+
+### Import/Export Operations
+
+ksr-cli provides comprehensive import and export functionality for schemas and subjects, making it easy to backup, migrate, or synchronize Schema Registry instances.
+
+#### Exporting Schemas
+
+```bash
+# Export all subjects (latest versions only)
+ksr-cli export subjects
+
+# Export all subjects to a file
+ksr-cli export subjects --file backup.json
+
+# Export all subjects with all versions
+ksr-cli export subjects --all-versions
+
+# Export all subjects to separate files in a directory
+ksr-cli export subjects --directory ./backup/
+
+# Export a specific subject
+ksr-cli export subject my-subject
+
+# Export a specific subject with all versions
+ksr-cli export subject my-subject --all-versions
+
+# Export subject to file
+ksr-cli export subject my-subject --file my-subject-backup.json
+
+# Export with configuration included (default)
+ksr-cli export subjects --include-config
+
+# Export without configuration
+ksr-cli export subjects --include-config=false
+
+# Export in different formats
+ksr-cli export subjects --output yaml --file backup.yaml
+```
+
+#### Importing Schemas
+
+```bash
+# Import subjects from file
+ksr-cli import subjects --file backup.json
+
+# Import from directory (all JSON files)
+ksr-cli import subjects --directory ./backup/
+
+# Import a single subject
+ksr-cli import subject --file my-subject-backup.json
+
+# Preview import without making changes
+ksr-cli import subjects --file backup.json --dry-run
+
+# Skip existing schemas during import
+ksr-cli import subjects --file backup.json --skip-existing
+
+# Import to different context
+ksr-cli import subjects --file backup.json --import-context staging
+
+# Force import even in read-only mode
+ksr-cli import subjects --file backup.json --force
+```
+
+#### Export File Format
+
+Exported data uses a structured JSON format that includes metadata, schemas, and configurations:
+
+```json
+{
+  "metadata": {
+    "exported_at": "2024-01-15T10:30:00Z",
+    "context": "production",
+    "registry_url": "http://localhost:8081",
+    "cli_version": "v1.0.0"
+  },
+  "config": {
+    "compatibility": "BACKWARD"
+  },
+  "subjects": [
+    {
+      "name": "my-subject",
+      "config": {
+        "compatibility": "FORWARD"
+      },
+      "versions": [
+        {
+          "id": 1,
+          "version": 1,
+          "schema": "{\"type\":\"record\",\"name\":\"MyRecord\",\"fields\":[]}",
+          "schema_type": "AVRO",
+          "references": []
+        }
+      ]
+    }
+  ]
+}
+```
+
+#### Migration Examples
+
+```bash
+# Backup production registry
+ksr-cli export subjects --all-versions --file prod-backup.json --context production
+
+# Migrate to staging
+ksr-cli import subjects --file prod-backup.json --import-context staging --skip-existing
+
+# Copy specific subject between environments
+ksr-cli export subject user-events --context production --all-versions --file user-events.json
+ksr-cli import subject --file user-events.json --import-context development
+
+# Synchronize registries (dry-run first)
+ksr-cli export subjects --context production --all-versions --file sync.json
+ksr-cli import subjects --file sync.json --context staging --dry-run
+ksr-cli import subjects --file sync.json --context staging --skip-existing
 ```
 
 ### Configuration Management

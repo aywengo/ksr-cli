@@ -34,10 +34,11 @@ var getSchemasCmd = &cobra.Command{
 	Long: `Get all schemas or a specific schema by subject name.
 
 Examples:
-  ksr-cli get schemas                    # List all subjects
-  ksr-cli get schemas my-subject         # Get latest schema for subject
-  ksr-cli get schemas my-subject -v 2    # Get specific version
-  ksr-cli get schemas my-subject --all   # Get all versions`,
+  ksr-cli get schemas                         # List all subjects
+  ksr-cli get schemas my-subject              # Get latest schema for subject
+  ksr-cli get schemas my-subject -v 2         # Get specific version
+  ksr-cli get schemas my-subject --all        # Get all versions
+  ksr-cli get schemas my-subject --all-versions # Get all versions`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c, err := client.NewClient()
@@ -225,6 +226,7 @@ func init() {
 	// Flags for schemas command
 	getSchemasCmd.Flags().StringVarP(&version, "version", "V", "", "Schema version")
 	getSchemasCmd.Flags().BoolVar(&allVersions, "all", false, "Get all versions")
+	getSchemasCmd.Flags().BoolVar(&allVersions, "all-versions", false, "Get all versions (alias for --all)")
 
 	// Global flags for all get commands
 	getCmd.PersistentFlags().StringVar(&context, "context", "", "Schema Registry context")
