@@ -7,7 +7,7 @@ set -e
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-COMPOSE_FILE="$PROJECT_ROOT/docker-compose.yml"
+COMPOSE_FILE="$SCRIPT_DIR/docker-compose.yml"
 
 # Colors for output
 RED='\033[0;31m'
@@ -37,7 +37,7 @@ fi
 
 # Start the services
 echo -e "${YELLOW}Starting Docker containers...${NC}"
-cd "$PROJECT_ROOT"
+cd "$SCRIPT_DIR"
 docker-compose up -d
 
 # Wait for services to be healthy

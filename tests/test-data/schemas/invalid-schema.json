@@ -1,0 +1,13 @@
+{
+  "type": "record",
+  "name": "InvalidSchema",
+  "fields": [
+    {
+      "name": "field1",
+      "type": "invalid_type"
+    },
+    {
+      "name": "field2"
+    }
+  ]
+} 

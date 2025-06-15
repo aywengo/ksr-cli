@@ -1,0 +1,23 @@
+{
+  "type": "record",
+  "name": "User",
+  "namespace": "com.example",
+  "fields": [
+    {
+      "name": "id",
+      "type": "string",
+      "doc": "User ID changed from long to string - BREAKING CHANGE"
+    },
+    {
+      "name": "username",
+      "type": "string",
+      "doc": "User's username"
+    },
+    {
+      "name": "created_at",
+      "type": "long",
+      "logicalType": "timestamp-millis",
+      "doc": "Account creation timestamp"
+    }
+  ]
+} 

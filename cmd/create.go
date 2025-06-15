@@ -3,19 +3,12 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 
 	"github.com/aywengo/ksr-cli/internal/client"
 	"github.com/aywengo/ksr-cli/internal/config"
 	"github.com/aywengo/ksr-cli/internal/output"
 	"github.com/spf13/cobra"
-)
-
-var (
-	schemaFile   string
-	schemaType   string
-	schemaString string
 )
 
 // createCmd represents the create command
@@ -79,42 +72,20 @@ Examples:
 			return fmt.Errorf("failed to register schema: %w", err)
 		}
 
-		fmt.Printf("Schema registered successfully with ID: %d\n", result.ID)
-		return output.Print(result, outputFormat)
-	},
-}
+		// Get the actual output format from the command flag
+		actualOutputFormat, _ := cmd.Flags().GetString("output")
 
-// getSchemaContent gets schema content from file, inline, or stdin
-func getSchemaContent() (string, error) {
-	// Priority: inline schema -> file -> stdin
-	if schemaString != "" {
-		return schemaString, nil
-	}
-
-	if schemaFile != "" {
-		content, err := os.ReadFile(schemaFile)
-		if err != nil {
-			return "", fmt.Errorf("failed to read schema file: %w", err)
+		// Only print user-friendly messages when output format is table
+		// For structured formats (json/yaml), send messages to stderr to avoid breaking parsing
+		if actualOutputFormat == "table" {
+			fmt.Printf("Schema registered successfully with ID: %d\n", result.ID)
+		} else {
+			// For structured output, send user messages to stderr
+			fmt.Fprintf(os.Stderr, "Schema registered successfully with ID: %d\n", result.ID)
 		}
-		return string(content), nil
-	}
 
-	// Read from stdin
-	stat, err := os.Stdin.Stat()
-	if err != nil {
-		return "", fmt.Errorf("failed to check stdin: %w", err)
-	}
-
-	if (stat.Mode() & os.ModeCharDevice) != 0 {
-		return "", fmt.Errorf("no schema provided: use --file, --schema, or pipe schema via stdin")
-	}
-
-	content, err := io.ReadAll(os.Stdin)
-	if err != nil {
-		return "", fmt.Errorf("failed to read from stdin: %w", err)
-	}
-
-	return string(content), nil
+		return output.Print(result, actualOutputFormat)
+	},
 }
 
 func init() {
@@ -126,4 +97,5 @@ func init() {
 	createSchemaCmd.Flags().StringVar(&schemaString, "schema", "", "Schema content as string")
 	createSchemaCmd.Flags().StringVarP(&schemaType, "type", "t", "AVRO", "Schema type (AVRO, JSON, PROTOBUF)")
 	createSchemaCmd.Flags().StringVar(&context, "context", "", "Schema Registry context")
+	createSchemaCmd.Flags().StringVarP(&outputFormat, "output", "o", "table", "Output format (table, json, yaml)")
 }

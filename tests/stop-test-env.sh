@@ -7,7 +7,7 @@ set -e
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-COMPOSE_FILE="$PROJECT_ROOT/docker-compose.yml"
+COMPOSE_FILE="$SCRIPT_DIR/docker-compose.yml"
 
 # Colors for output
 RED='\033[0;31m'
@@ -73,7 +73,7 @@ if [ ! -f "$COMPOSE_FILE" ]; then
     exit 1
 fi
 
-cd "$PROJECT_ROOT"
+cd "$SCRIPT_DIR"
 
 # Check if any containers are running
 if ! docker-compose ps --quiet 2>/dev/null | grep -q .; then

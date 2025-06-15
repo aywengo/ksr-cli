@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/aywengo/ksr-cli/internal/client"
 	"github.com/aywengo/ksr-cli/internal/config"
@@ -35,6 +36,7 @@ The schema can be provided via:
 Examples:
   ksr-cli check compatibility my-subject --file new-schema.avsc
   ksr-cli check compatibility my-subject --schema '{"type":"string"}'
+  ksr-cli check compatibility my-subject --version 2 --file new-schema.avsc
   cat new-schema.avsc | ksr-cli check compatibility my-subject`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -66,25 +68,52 @@ Examples:
 
 		// Check compatibility
 		effectiveContext := config.GetEffectiveContext(context)
-		result, err := c.CheckCompatibility(subject, schemaReq, effectiveContext)
+
+		// Use version if specified, otherwise check against latest
+		var result *client.CompatibilityResponse
+		if version != "" {
+			result, err = c.CheckCompatibilityWithVersion(subject, version, schemaReq, effectiveContext)
+		} else {
+			result, err = c.CheckCompatibility(subject, schemaReq, effectiveContext)
+		}
+
 		if err != nil {
 			return fmt.Errorf("failed to check compatibility: %w", err)
 		}
 
-		// Print user-friendly message
-		if result.IsCompatible {
-			fmt.Printf("✅ Schema is compatible with subject '%s'\n", subject)
+		// Get the actual output format from the command flag
+		actualOutputFormat, _ := cmd.Flags().GetString("output")
+
+		// Only print user-friendly messages when output format is table
+		// For structured formats (json/yaml), send messages to stderr to avoid breaking parsing
+		if actualOutputFormat == "table" {
+			if result.IsCompatible {
+				fmt.Printf("✅ Schema is compatible with subject '%s'\n", subject)
+			} else {
+				fmt.Printf("❌ Schema is NOT compatible with subject '%s'\n", subject)
+				if len(result.Messages) > 0 {
+					fmt.Println("Compatibility issues:")
+					for _, msg := range result.Messages {
+						fmt.Printf("  • %s\n", msg)
+					}
+				}
+			}
 		} else {
-			fmt.Printf("❌ Schema is NOT compatible with subject '%s'\n", subject)
-			if len(result.Messages) > 0 {
-				fmt.Println("Compatibility issues:")
-				for _, msg := range result.Messages {
-					fmt.Printf("  • %s\n", msg)
+			// For structured output, send user messages to stderr
+			if result.IsCompatible {
+				fmt.Fprintf(os.Stderr, "✅ Schema is compatible with subject '%s'\n", subject)
+			} else {
+				fmt.Fprintf(os.Stderr, "❌ Schema is NOT compatible with subject '%s'\n", subject)
+				if len(result.Messages) > 0 {
+					fmt.Fprintln(os.Stderr, "Compatibility issues:")
+					for _, msg := range result.Messages {
+						fmt.Fprintf(os.Stderr, "  • %s\n", msg)
+					}
 				}
 			}
 		}
 
-		return output.Print(result, outputFormat)
+		return output.Print(result, actualOutputFormat)
 	},
 }
 
@@ -97,5 +126,6 @@ func init() {
 	checkCompatibilityCmd.Flags().StringVar(&schemaString, "schema", "", "Schema content as string")
 	checkCompatibilityCmd.Flags().StringVarP(&schemaType, "type", "t", "AVRO", "Schema type (AVRO, JSON, PROTOBUF)")
 	checkCompatibilityCmd.Flags().StringVar(&context, "context", "", "Schema Registry context")
-	checkCmd.PersistentFlags().StringVarP(&outputFormat, "output", "o", "table", "Output format (table, json, yaml)")
+	checkCompatibilityCmd.Flags().StringVarP(&version, "version", "V", "", "Check compatibility against specific version (default: latest)")
+	checkCompatibilityCmd.Flags().StringVarP(&outputFormat, "output", "o", "table", "Output format (table, json, yaml)")
 }

@@ -7,7 +7,7 @@ This directory contains scripts and utilities for managing a local test environm
 ### Automated Integration Tests
 
 ```bash
-# Run complete integration test suite
+# Run complete integration test suite (RECOMMENDED)
 bash tests/run-integration-tests.sh
 
 # The test suite automatically:
@@ -15,8 +15,30 @@ bash tests/run-integration-tests.sh
 # 2. Starts Docker Compose test environment
 # 3. Configures CLI for test environment
 # 4. Loads test schemas from tests/test-data/schemas/
-# 5. Runs all integration tests
+# 5. Runs comprehensive integration tests
 # 6. Cleans up test environment
+```
+
+### Running Individual Test Suites
+
+```bash
+# Start test environment manually first
+./tests/start-test-env.sh
+
+# Run specific test suites
+cd tests/integration/
+bash test_create_commands.sh
+bash test_get_commands.sh
+bash test_check_commands.sh
+bash test_config_commands.sh
+bash test_context_operations.sh
+bash test_schema_evolution.sh
+
+# Or run all test suites together
+bash test_comprehensive.sh
+
+# Stop test environment when done
+./tests/stop-test-env.sh
 ```
 
 ### Manual Test Environment
@@ -62,26 +84,89 @@ The integration tests validate:
 - ✅ Subject listing and management
 - ✅ Version management
 - ✅ Configuration management
+- ✅ Compatibility checking
+- ✅ Schema evolution scenarios
+- ✅ Error handling and edge cases
 
 #### Context-Aware Operations
 - ✅ Default context configuration
 - ✅ Context persistence across commands
 - ✅ Context override via flags
 - ✅ Multi-context operations
+- ✅ Context isolation
+- ✅ Cross-context operations
 
 #### CLI Features
 - ✅ Configuration file management
-- ✅ Multiple output formats
+- ✅ Multiple output formats (table, json, yaml)
 - ✅ Error handling
 - ✅ Command-line argument parsing
+- ✅ Authentication configuration
+- ✅ Schema type support (AVRO, JSON)
 
-#### Test Scripts
+#### Comprehensive Test Suites
 
 **tests/integration/test_basic.sh:**
-- Validates schema registration
-- Tests context configuration
-- Verifies CLI configuration persistence
-- Checks subject listing functionality
+- Basic schema registration
+- Context configuration
+- CLI configuration persistence
+- Subject listing functionality
+
+**tests/integration/test_create_commands.sh:**
+- Schema creation from files, inline JSON, and stdin
+- Different schema types (AVRO, JSON)
+- Context-specific schema creation
+- Error handling for invalid schemas and missing files
+- Schema versioning
+
+**tests/integration/test_get_commands.sh:**
+- Subject listing and retrieval
+- Schema retrieval by version and subject
+- Version listing
+- Configuration retrieval (global and subject-specific)
+- Output format testing (JSON, YAML, table)
+- Context-specific operations
+- Error handling for non-existent resources
+
+**tests/integration/test_check_commands.sh:**
+- Schema compatibility checking
+- Compatible and incompatible schema detection
+- Inline schema and file-based compatibility
+- Context-specific compatibility checks
+- Different schema type compatibility
+- Error handling and validation
+
+**tests/integration/test_config_commands.sh:**
+- Configuration initialization
+- Setting and getting all configuration values
+- Authentication credentials management
+- Output format configuration
+- Context configuration
+- Error handling for invalid values
+- Configuration persistence
+
+**tests/integration/test_context_operations.sh:**
+- Multi-context schema operations
+- Context isolation verification
+- Default context behavior
+- Context override functionality
+- Cross-context operations
+- Context-specific compatibility checks
+- Schema evolution within contexts
+
+**tests/integration/test_schema_evolution.sh:**
+- Schema version management
+- Backward compatibility preservation
+- Compatible schema evolution
+- Incompatible schema rejection
+- Version-specific operations
+- Multiple evolution steps
+- Complex schema type evolution
+
+**tests/integration/test_comprehensive.sh:**
+- Orchestrates all individual test suites
+- Provides comprehensive test reporting
+- Summary of test results across all areas
 
 ### Test Data
 

@@ -10,12 +10,8 @@ import (
 )
 
 var (
-	version     string
-	context     string
 	allVersions bool
 )
-
-var outputFormat string
 
 // getCmd represents the get command
 var getCmd = &cobra.Command{

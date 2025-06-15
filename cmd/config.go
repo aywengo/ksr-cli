@@ -282,10 +282,3 @@ func initConfig() {
 		}
 	}
 }
-
-var rootCmd = &cobra.Command{Use: "ksr-cli"}
-
-// Execute executes the root command.
-func Execute() error {
-	return rootCmd.Execute()
-}

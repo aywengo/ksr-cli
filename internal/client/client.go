@@ -198,6 +198,31 @@ func (c *Client) CheckCompatibility(subject string, schemaData *SchemaRequest, c
 	return &result, nil
 }
 
+// CheckCompatibilityWithVersion checks if a schema is compatible with a specific version
+func (c *Client) CheckCompatibilityWithVersion(subject, version string, schemaData *SchemaRequest, context string) (*CompatibilityResponse, error) {
+	path := fmt.Sprintf("/compatibility/subjects/%s/versions/%s", url.PathEscape(subject), url.PathEscape(version))
+	if context != "" {
+		path += "?context=" + url.QueryEscape(context)
+	}
+
+	resp, err := c.makeRequest("POST", path, schemaData)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, c.handleError(resp)
+	}
+
+	var result CompatibilityResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return &result, nil
+}
+
 // GetGlobalConfig returns the global configuration
 func (c *Client) GetGlobalConfig(context string) (*Config, error) {
 	path := "/config"

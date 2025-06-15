@@ -1,0 +1,67 @@
+{
+  "type": "record",
+  "name": "Product",
+  "namespace": "com.example",
+  "fields": [
+    {
+      "name": "product_id",
+      "type": "string",
+      "doc": "Unique product identifier"
+    },
+    {
+      "name": "name",
+      "type": "string",
+      "doc": "Product name"
+    },
+    {
+      "name": "description",
+      "type": ["null", "string"],
+      "default": null,
+      "doc": "Product description"
+    },
+    {
+      "name": "price",
+      "type": "double",
+      "doc": "Product price"
+    },
+    {
+      "name": "category",
+      "type": {
+        "type": "enum",
+        "name": "ProductCategory",
+        "symbols": ["ELECTRONICS", "CLOTHING", "BOOKS", "HOME", "SPORTS", "OTHER"]
+      },
+      "doc": "Product category"
+    },
+    {
+      "name": "tags",
+      "type": {
+        "type": "array",
+        "items": "string"
+      },
+      "default": [],
+      "doc": "Product tags"
+    },
+    {
+      "name": "specifications",
+      "type": {
+        "type": "map",
+        "values": "string"
+      },
+      "default": {},
+      "doc": "Product specifications as key-value pairs"
+    },
+    {
+      "name": "in_stock",
+      "type": "boolean",
+      "default": true,
+      "doc": "Whether the product is in stock"
+    },
+    {
+      "name": "created_at",
+      "type": "long",
+      "logicalType": "timestamp-millis",
+      "doc": "Product creation timestamp"
+    }
+  ]
+} 
