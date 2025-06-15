@@ -1,7 +1,7 @@
 Source: ksr-cli
 Section: utils
 Priority: optional
-Maintainer: Aywen Go <aywengo@gmail.com>
+Maintainer: Roman Melnyk <aywengo@gmail.com>
 Build-Depends: debhelper (>= 9), golang-go (>= 2:1.21)
 Standards-Version: 4.5.0
 Homepage: https://github.com/aywengo/ksr-cli
