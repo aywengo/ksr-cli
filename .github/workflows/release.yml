@@ -33,11 +33,19 @@ jobs:
     - name: Run tests
       run: go test -v ./...
     
-    # Skip linting for now - can be added back later
-    # - name: Run linting
-    #   run: |
-    #     go vet ./...
-    #     go fmt ./...
+    # Simple linting with go vet and go fmt
+    - name: Run go vet
+      run: go vet ./...
+    
+    - name: Check formatting
+      run: |
+        fmt_files=$(gofmt -l .)
+        if [ -n "$fmt_files" ]; then
+          echo "The following files need formatting:"
+          echo "$fmt_files"
+          echo "Run 'go fmt ./...' to fix formatting"
+          exit 1
+        fi
 
   build:
     needs: test
