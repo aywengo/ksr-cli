@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/aywengo/ksr-cli/internal/client"
+	"github.com/aywengo/ksr-cli/internal/config"
 	"github.com/aywengo/ksr-cli/internal/output"
 	"github.com/spf13/cobra"
 )
@@ -64,7 +65,8 @@ Examples:
 		}
 
 		// Check compatibility
-		result, err := c.CheckCompatibility(subject, schemaReq, context)
+		effectiveContext := config.GetEffectiveContext(context)
+		result, err := c.CheckCompatibility(subject, schemaReq, effectiveContext)
 		if err != nil {
 			return fmt.Errorf("failed to check compatibility: %w", err)
 		}

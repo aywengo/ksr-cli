@@ -26,6 +26,7 @@ func SetDefaults() {
 	viper.SetDefault(KeyVerbose, false)
 	viper.SetDefault(KeyTimeout, "30s")
 	viper.SetDefault(KeyInsecure, false)
+	viper.SetDefault(KeyContext, ".") // Default context is "."
 }
 
 // Config represents the CLI configuration
@@ -94,4 +95,12 @@ func IsSet(key string) bool {
 // AllSettings returns all configuration settings
 func AllSettings() map[string]interface{} {
 	return viper.AllSettings()
+}
+
+// GetEffectiveContext returns the context to use (flag value or configured default)
+func GetEffectiveContext(flagContext string) string {
+	if flagContext != "" {
+		return flagContext
+	}
+	return GetString(KeyContext)
 }

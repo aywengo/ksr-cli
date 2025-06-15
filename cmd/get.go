@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/aywengo/ksr-cli/internal/client"
+	"github.com/aywengo/ksr-cli/internal/config"
 	"github.com/aywengo/ksr-cli/internal/output"
 	"github.com/spf13/cobra"
 )
@@ -48,9 +49,11 @@ Examples:
 			return fmt.Errorf("failed to create client: %w", err)
 		}
 
+		effectiveContext := config.GetEffectiveContext(context)
+
 		if len(args) == 0 {
 			// List all subjects
-			subjects, err := c.GetSubjects(context)
+			subjects, err := c.GetSubjects(effectiveContext)
 			if err != nil {
 				return fmt.Errorf("failed to get subjects: %w", err)
 			}
@@ -61,14 +64,14 @@ Examples:
 
 		if allVersions {
 			// Get all versions for subject
-			versions, err := c.GetSubjectVersions(subject, context)
+			versions, err := c.GetSubjectVersions(subject, effectiveContext)
 			if err != nil {
 				return fmt.Errorf("failed to get versions for subject %s: %w", subject, err)
 			}
 
 			var schemas []interface{}
 			for _, v := range versions {
-				schema, err := c.GetSchema(subject, fmt.Sprintf("%d", v), context)
+				schema, err := c.GetSchema(subject, fmt.Sprintf("%d", v), effectiveContext)
 				if err != nil {
 					return fmt.Errorf("failed to get schema version %d: %w", v, err)
 				}
@@ -83,7 +86,7 @@ Examples:
 			ver = "latest"
 		}
 
-		schema, err := c.GetSchema(subject, ver, context)
+		schema, err := c.GetSchema(subject, ver, effectiveContext)
 		if err != nil {
 			return fmt.Errorf("failed to get schema: %w", err)
 		}
@@ -102,7 +105,8 @@ var getSubjectsCmd = &cobra.Command{
 			return fmt.Errorf("failed to create client: %w", err)
 		}
 
-		subjects, err := c.GetSubjects(context)
+		effectiveContext := config.GetEffectiveContext(context)
+		subjects, err := c.GetSubjects(effectiveContext)
 		if err != nil {
 			return fmt.Errorf("failed to get subjects: %w", err)
 		}
@@ -123,7 +127,8 @@ var getVersionsCmd = &cobra.Command{
 		}
 
 		subject := args[0]
-		versions, err := c.GetSubjectVersions(subject, context)
+		effectiveContext := config.GetEffectiveContext(context)
+		versions, err := c.GetSubjectVersions(subject, effectiveContext)
 		if err != nil {
 			return fmt.Errorf("failed to get versions for subject %s: %w", subject, err)
 		}
@@ -147,9 +152,11 @@ Examples:
 			return fmt.Errorf("failed to create client: %w", err)
 		}
 
+		effectiveContext := config.GetEffectiveContext(context)
+
 		if len(args) == 0 {
 			// Get global config
-			config, err := c.GetGlobalConfig(context)
+			config, err := c.GetGlobalConfig(effectiveContext)
 			if err != nil {
 				return fmt.Errorf("failed to get global config: %w", err)
 			}
@@ -158,7 +165,7 @@ Examples:
 
 		// Get subject config
 		subject := args[0]
-		config, err := c.GetSubjectConfig(subject, context)
+		config, err := c.GetSubjectConfig(subject, effectiveContext)
 		if err != nil {
 			return fmt.Errorf("failed to get config for subject %s: %w", subject, err)
 		}

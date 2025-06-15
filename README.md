@@ -16,7 +16,8 @@ A comprehensive command-line interface for managing Kafka Schema Registry. Built
 - ✅ **Authentication support** - Basic auth and API key authentication
 - ✅ **Schema operations** - Get, create, delete, and manage schemas
 - ✅ **Compatibility checking** - Validate schema compatibility
-- ✅ **Context support** - Multi-tenant Schema Registry support
+- ✅ **Context-aware operations** - Multi-tenant Schema Registry support with configurable default context
+- ✅ **Integration testing** - Comprehensive test suite with Docker-based test environment
 - ✅ **Package distribution** - Available via Homebrew and APT repositories
 
 ## Installation
@@ -167,12 +168,46 @@ ksr-cli get config my-subject
 
 ### Context Support
 
-```bash
-# List subjects in specific context
-ksr-cli get subjects --context my-context
+ksr-cli supports Schema Registry contexts for multi-tenant environments. You can set a default context in your configuration and override it per command when needed.
 
-# Get schema in specific context
-ksr-cli get schemas my-subject --context my-context
+```bash
+# Set default context for all operations
+ksr-cli config set context production
+
+# All commands now use 'production' context by default
+ksr-cli get subjects
+ksr-cli create schema my-subject --file schema.avsc
+ksr-cli check compatibility my-subject --file new-schema.avsc
+
+# Override context for specific commands
+ksr-cli get subjects --context staging
+ksr-cli get schemas my-subject --context development
+
+# Check current default context
+ksr-cli config get context
+
+# Reset to default context (.)
+ksr-cli config set context .
+
+# List subjects in multiple contexts
+ksr-cli get subjects --context production
+ksr-cli get subjects --context staging
+ksr-cli get subjects --context development
+```
+
+**Context Configuration Examples:**
+```bash
+# Development workflow
+ksr-cli config set context development
+ksr-cli config set registry-url http://dev-schema-registry:8081
+
+# Production workflow  
+ksr-cli config set context production
+ksr-cli config set registry-url http://prod-schema-registry:8081
+
+# Multi-environment operations
+ksr-cli get subjects --context production --output json > prod-subjects.json
+ksr-cli get subjects --context staging --output json > staging-subjects.json
 ```
 
 ### Output Formats
@@ -202,7 +237,7 @@ api-key: your-api-key
 output: table
 timeout: 30s
 insecure: false
-context: default
+context: production  # Default context for all operations
 ```
 
 ## Environment Variables
@@ -214,6 +249,7 @@ export KSR_REGISTRY_URL=http://localhost:8081
 export KSR_USERNAME=myuser
 export KSR_PASSWORD=mypass
 export KSR_OUTPUT=json
+export KSR_CONTEXT=production
 ```
 
 ## Shell Completion
@@ -254,9 +290,44 @@ make build-all
 # Run tests
 make test
 
+# Run integration tests
+make test-integration
+
 # Run linting
 make lint
 ```
+
+### Integration Testing
+
+ksr-cli includes a comprehensive integration test suite that uses Docker Compose to create a realistic test environment:
+
+```bash
+# Run all integration tests
+bash tests/run-integration-tests.sh
+
+# The test suite will:
+# 1. Build the CLI from source
+# 2. Start Kafka and Schema Registry via Docker Compose
+# 3. Configure the CLI to use the test environment
+# 4. Load test schemas from tests/test-data/schemas/
+# 5. Run integration tests including context functionality
+# 6. Clean up the test environment
+```
+
+**Test Environment Components:**
+- **Kafka** (KRaft mode) on port 39092
+- **Schema Registry** on port 38081
+- **AKHQ UI** on port 38080 for manual testing
+- **Test schemas** in `tests/test-data/schemas/`
+
+**Integration Test Coverage:**
+- Schema registration and retrieval
+- Context configuration and usage
+- CLI configuration management
+- Multi-format output validation
+- Error handling and edge cases
+
+For more details on the test environment, see [tests/README.md](tests/README.md).
 
 ### Contributing
 

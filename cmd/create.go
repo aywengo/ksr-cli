@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/aywengo/ksr-cli/internal/client"
+	"github.com/aywengo/ksr-cli/internal/config"
 	"github.com/aywengo/ksr-cli/internal/output"
 	"github.com/spf13/cobra"
 )
@@ -72,7 +73,8 @@ Examples:
 		}
 
 		// Register schema
-		result, err := c.RegisterSchema(subject, schemaReq, context)
+		effectiveContext := config.GetEffectiveContext(context)
+		result, err := c.RegisterSchema(subject, schemaReq, effectiveContext)
 		if err != nil {
 			return fmt.Errorf("failed to register schema: %w", err)
 		}

@@ -43,12 +43,13 @@ Available configuration keys:
   output          - Default output format (table, json, yaml)
   timeout         - Request timeout (e.g., 30s)
   insecure        - Skip TLS verification (true/false)
-  context         - Default Schema Registry context
+  context         - Default Schema Registry context (default: ".")
 
 Examples:
   ksr-cli config set registry-url http://localhost:8081
   ksr-cli config set output json
-  ksr-cli config set timeout 60s`,
+  ksr-cli config set timeout 60s
+  ksr-cli config set context my-context`,
 	Args: cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		key := args[0]
