@@ -29,6 +29,10 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-go-
     
+    # Fix: Run go mod tidy to ensure go.sum is up to date
+    - name: Tidy modules
+      run: go mod tidy
+    
     - name: Download dependencies
       run: go mod download
     
@@ -74,6 +78,13 @@ jobs:
       uses: actions/setup-go@v4
       with:
         go-version: '1.21'
+    
+    # Fix: Ensure dependencies are resolved before building
+    - name: Tidy modules
+      run: go mod tidy
+    
+    - name: Download dependencies
+      run: go mod download
     
     - name: Get version
       id: version
