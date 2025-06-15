@@ -1,0 +1,52 @@
+{
+  "type": "record",
+  "name": "User",
+  "namespace": "com.example",
+  "fields": [
+    {
+      "name": "id",
+      "type": "long",
+      "doc": "Unique user identifier"
+    },
+    {
+      "name": "username",
+      "type": "string",
+      "doc": "User's username"
+    },
+    {
+      "name": "email",
+      "type": "string",
+      "doc": "User's email address"
+    },
+    {
+      "name": "created_at",
+      "type": "long",
+      "logicalType": "timestamp-millis",
+      "doc": "Account creation timestamp"
+    },
+    {
+      "name": "profile",
+      "type": {
+        "type": "record",
+        "name": "UserProfile",
+        "fields": [
+          {
+            "name": "first_name",
+            "type": ["null", "string"],
+            "default": null
+          },
+          {
+            "name": "last_name",
+            "type": ["null", "string"],
+            "default": null
+          },
+          {
+            "name": "age",
+            "type": ["null", "int"],
+            "default": null
+          }
+        ]
+      }
+    }
+  ]
+}
