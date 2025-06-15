@@ -1,0 +1,308 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+    
+    - name: Cache Go modules
+      uses: actions/cache@v3
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+    
+    - name: Download dependencies
+      run: go mod download
+    
+    - name: Run tests
+      run: go test -v ./...
+    
+    - name: Run linting
+      uses: golangci/golangci-lint-action@v3
+      with:
+        version: latest
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            artifact_name: ksr-cli
+            asset_name: ksr-cli-linux-amd64
+          - goos: linux
+            goarch: arm64
+            artifact_name: ksr-cli
+            asset_name: ksr-cli-linux-arm64
+          - goos: darwin
+            goarch: amd64
+            artifact_name: ksr-cli
+            asset_name: ksr-cli-darwin-amd64
+          - goos: darwin
+            goarch: arm64
+            artifact_name: ksr-cli
+            asset_name: ksr-cli-darwin-arm64
+          - goos: windows
+            goarch: amd64
+            artifact_name: ksr-cli.exe
+            asset_name: ksr-cli-windows-amd64.exe
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+    
+    - name: Get version
+      id: version
+      run: |
+        if [[ $GITHUB_REF == refs/tags/* ]]; then
+          VERSION=${GITHUB_REF#refs/tags/}
+        else
+          VERSION=${GITHUB_SHA::8}
+        fi
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        echo "Building version: $VERSION"
+    
+    - name: Build binary
+      env:
+        GOOS: ${{ matrix.goos }}
+        GOARCH: ${{ matrix.goarch }}
+        VERSION: ${{ steps.version.outputs.VERSION }}
+      run: |
+        LDFLAGS="-ldflags=-X main.Version=$VERSION -X main.BuildTime=$(date +%FT%T%z) -s -w"
+        go build $LDFLAGS -o ${{ matrix.artifact_name }} .
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.asset_name }}
+        path: ${{ matrix.artifact_name }}
+
+  package-deb:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Download Linux AMD64 binary
+      uses: actions/download-artifact@v3
+      with:
+        name: ksr-cli-linux-amd64
+        path: ./bin/amd64/
+    
+    - name: Download Linux ARM64 binary
+      uses: actions/download-artifact@v3
+      with:
+        name: ksr-cli-linux-arm64
+        path: ./bin/arm64/
+    
+    - name: Get version
+      id: version
+      run: |
+        if [[ $GITHUB_REF == refs/tags/* ]]; then
+          VERSION=${GITHUB_REF#refs/tags/v}
+        else
+          VERSION="0.0.0-${GITHUB_SHA::8}"
+        fi
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+    
+    - name: Create DEB packages
+      run: |
+        # Install packaging tools
+        sudo apt-get update
+        sudo apt-get install -y dpkg-dev debhelper
+        
+        # Create packages for both architectures
+        for arch in amd64 arm64; do
+          mkdir -p packaging/deb-$arch/ksr-cli-${{ steps.version.outputs.VERSION }}/DEBIAN
+          mkdir -p packaging/deb-$arch/ksr-cli-${{ steps.version.outputs.VERSION }}/usr/bin
+          mkdir -p packaging/deb-$arch/ksr-cli-${{ steps.version.outputs.VERSION }}/usr/share/man/man1
+          mkdir -p packaging/deb-$arch/ksr-cli-${{ steps.version.outputs.VERSION }}/etc/bash_completion.d
+          
+          # Copy binary
+          cp bin/$arch/ksr-cli packaging/deb-$arch/ksr-cli-${{ steps.version.outputs.VERSION }}/usr/bin/
+          chmod +x packaging/deb-$arch/ksr-cli-${{ steps.version.outputs.VERSION }}/usr/bin/ksr-cli
+          
+          # Create control file
+          cat > packaging/deb-$arch/ksr-cli-${{ steps.version.outputs.VERSION }}/DEBIAN/control << EOF
+        Package: ksr-cli
+        Version: ${{ steps.version.outputs.VERSION }}
+        Section: utils
+        Priority: optional
+        Architecture: $arch
+        Maintainer: Aywen Go <aywengo@gmail.com>
+        Description: CLI tool for Kafka Schema Registry
+         A comprehensive command-line interface for managing Kafka Schema Registry.
+         Provides commands to get, create, delete, and manage schemas, subjects, and configurations.
+        EOF
+          
+          # Create bash completion
+          ./bin/$arch/ksr-cli completion bash > packaging/deb-$arch/ksr-cli-${{ steps.version.outputs.VERSION }}/etc/bash_completion.d/ksr-cli
+          
+          # Build package
+          dpkg-deb --build packaging/deb-$arch/ksr-cli-${{ steps.version.outputs.VERSION }}
+          mv packaging/deb-$arch/ksr-cli-${{ steps.version.outputs.VERSION }}.deb ksr-cli_${{ steps.version.outputs.VERSION }}_$arch.deb
+        done
+    
+    - name: Upload DEB artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: deb-packages
+        path: "*.deb"
+
+  homebrew-formula:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Get version and create checksums
+      id: checksums
+      run: |
+        if [[ $GITHUB_REF == refs/tags/* ]]; then
+          VERSION=${GITHUB_REF#refs/tags/v}
+          TAG=${GITHUB_REF#refs/tags/}
+        else
+          VERSION="0.0.0-${GITHUB_SHA::8}"
+          TAG=$VERSION
+        fi
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        echo "TAG=$TAG" >> $GITHUB_OUTPUT
+        
+        # These will be updated with actual release URLs and checksums
+        echo "DARWIN_AMD64_URL=https://github.com/${{ github.repository }}/releases/download/$TAG/ksr-cli-darwin-amd64.tar.gz" >> $GITHUB_OUTPUT
+        echo "DARWIN_ARM64_URL=https://github.com/${{ github.repository }}/releases/download/$TAG/ksr-cli-darwin-arm64.tar.gz" >> $GITHUB_OUTPUT
+    
+    - name: Generate Homebrew formula
+      run: |
+        mkdir -p Formula
+        cat > Formula/ksr-cli.rb << 'EOF'
+        class KsrCli < Formula
+          desc "CLI tool for Kafka Schema Registry"
+          homepage "https://github.com/${{ github.repository }}"
+          version "${{ steps.checksums.outputs.VERSION }}"
+          
+          if OS.mac? && Hardware::CPU.intel?
+            url "${{ steps.checksums.outputs.DARWIN_AMD64_URL }}"
+            # sha256 will be updated by release process
+          elsif OS.mac? && Hardware::CPU.arm?
+            url "${{ steps.checksums.outputs.DARWIN_ARM64_URL }}"
+            # sha256 will be updated by release process
+          end
+          
+          def install
+            bin.install "ksr-cli"
+            
+            # Install bash completion
+            bash_completion.install "completion/ksr-cli_bash_completion" => "ksr-cli"
+            
+            # Install zsh completion
+            zsh_completion.install "completion/ksr-cli_zsh_completion" => "_ksr-cli"
+          end
+          
+          test do
+            system "#{bin}/ksr-cli", "help"
+          end
+        end
+        EOF
+    
+    - name: Upload Homebrew formula
+      uses: actions/upload-artifact@v3
+      with:
+        name: homebrew-formula
+        path: Formula/ksr-cli.rb
+
+  release:
+    needs: [build, package-deb, homebrew-formula]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+    
+    - name: Get version
+      id: version
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/v}
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+    
+    - name: Create tarballs
+      run: |
+        # Create tarballs for each binary
+        for artifact in ksr-cli-*-*; do
+          if [[ -f "$artifact/ksr-cli" || -f "$artifact/ksr-cli.exe" ]]; then
+            cd "$artifact"
+            if [[ -f "ksr-cli.exe" ]]; then
+              tar -czf "../${artifact}.tar.gz" ksr-cli.exe
+            else
+              tar -czf "../${artifact}.tar.gz" ksr-cli
+            fi
+            cd ..
+          fi
+        done
+        
+        # List all files for debugging
+        ls -la
+    
+    - name: Generate checksums
+      run: |
+        sha256sum *.tar.gz > checksums.txt
+        sha256sum deb-packages/*.deb >> checksums.txt
+    
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          *.tar.gz
+          deb-packages/*.deb
+          checksums.txt
+          homebrew-formula/ksr-cli.rb
+        body: |
+          ## Changes
+          
+          See [CHANGELOG.md](CHANGELOG.md) for details.
+          
+          ## Installation
+          
+          ### Homebrew (macOS)
+          ```bash
+          brew install aywengo/tap/ksr-cli
+          ```
+          
+          ### APT (Ubuntu/Debian)
+          ```bash
+          wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/ksr-cli_${{ steps.version.outputs.VERSION }}_amd64.deb
+          sudo dpkg -i ksr-cli_${{ steps.version.outputs.VERSION }}_amd64.deb
+          ```
+          
+          ### Manual Installation
+          Download the appropriate binary for your platform from the assets below.
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
