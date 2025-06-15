@@ -192,74 +192,15 @@ jobs:
         name: deb-packages
         path: "*.deb"
 
-  homebrew-formula:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Get version and create checksums
-      id: checksums
-      run: |
-        if [[ $GITHUB_REF == refs/tags/* ]]; then
-          VERSION=${GITHUB_REF#refs/tags/v}
-          TAG=${GITHUB_REF#refs/tags/}
-        else
-          VERSION="0.0.0-${GITHUB_SHA::8}"
-          TAG=$VERSION
-        fi
-        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-        echo "TAG=$TAG" >> $GITHUB_OUTPUT
-        
-        # These will be updated with actual release URLs and checksums
-        echo "DARWIN_AMD64_URL=https://github.com/${{ github.repository }}/releases/download/$TAG/ksr-cli-darwin-amd64.tar.gz" >> $GITHUB_OUTPUT
-        echo "DARWIN_ARM64_URL=https://github.com/${{ github.repository }}/releases/download/$TAG/ksr-cli-darwin-arm64.tar.gz" >> $GITHUB_OUTPUT
-    
-    - name: Generate Homebrew formula
-      run: |
-        mkdir -p Formula
-        cat > Formula/ksr-cli.rb << 'EOF'
-        class KsrCli < Formula
-          desc "CLI tool for Kafka Schema Registry"
-          homepage "https://github.com/${{ github.repository }}"
-          version "${{ steps.checksums.outputs.VERSION }}"
-          
-          if OS.mac? && Hardware::CPU.intel?
-            url "${{ steps.checksums.outputs.DARWIN_AMD64_URL }}"
-            # sha256 will be updated by release process
-          elsif OS.mac? && Hardware::CPU.arm?
-            url "${{ steps.checksums.outputs.DARWIN_ARM64_URL }}"
-            # sha256 will be updated by release process
-          end
-          
-          def install
-            bin.install "ksr-cli"
-            
-            # Install bash completion
-            bash_completion.install "completion/ksr-cli_bash_completion" => "ksr-cli"
-            
-            # Install zsh completion
-            zsh_completion.install "completion/ksr-cli_zsh_completion" => "_ksr-cli"
-          end
-          
-          test do
-            system "#{bin}/ksr-cli", "help"
-          end
-        end
-        EOF
-    
-    - name: Upload Homebrew formula
-      uses: actions/upload-artifact@v4
-      with:
-        name: homebrew-formula
-        path: Formula/ksr-cli.rb
-
   release:
-    needs: [build, package-deb, homebrew-formula]
+    needs: [build, package-deb]
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
     permissions:
       contents: write
+    outputs:
+      upload_url: ${{ steps.release.outputs.upload_url }}
+      version: ${{ steps.version.outputs.VERSION }}
     steps:
     - uses: actions/checkout@v4
     
@@ -294,15 +235,16 @@ jobs:
       run: |
         sha256sum *.tar.gz > checksums.txt
         sha256sum deb-packages/*.deb >> checksums.txt || true
+        cat checksums.txt
     
     - name: Create Release
+      id: release
       uses: softprops/action-gh-release@v1
       with:
         files: |
           *.tar.gz
           deb-packages/*.deb
           checksums.txt
-          homebrew-formula/ksr-cli.rb
         body: |
           ## Changes
           
@@ -326,3 +268,71 @@ jobs:
         draft: false
         prerelease: false
         token: ${{ secrets.GITHUB_TOKEN }}
+
+  update-homebrew-tap:
+    needs: release
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+    - name: Checkout tap repository
+      uses: actions/checkout@v4
+      with:
+        repository: aywengo/homebrew-tap
+        token: ${{ secrets.TAP_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+        path: homebrew-tap
+    
+    - name: Download checksums
+      run: |
+        curl -L https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/checksums.txt -o checksums.txt
+        cat checksums.txt
+    
+    - name: Generate Homebrew formula
+      run: |
+        # Extract checksums for Darwin builds
+        DARWIN_AMD64_SHA=$(grep "ksr-cli-darwin-amd64.tar.gz" checksums.txt | cut -d' ' -f1)
+        DARWIN_ARM64_SHA=$(grep "ksr-cli-darwin-arm64.tar.gz" checksums.txt | cut -d' ' -f1)
+        
+        VERSION="${{ needs.release.outputs.version }}"
+        TAG="${{ github.ref_name }}"
+        
+        # Create the formula
+        cat > homebrew-tap/Formula/ksr-cli.rb << EOF
+        class KsrCli < Formula
+          desc "CLI tool for Kafka Schema Registry"
+          homepage "https://github.com/${{ github.repository }}"
+          version "$VERSION"
+          
+          if OS.mac? && Hardware::CPU.intel?
+            url "https://github.com/${{ github.repository }}/releases/download/$TAG/ksr-cli-darwin-amd64.tar.gz"
+            sha256 "$DARWIN_AMD64_SHA"
+          elsif OS.mac? && Hardware::CPU.arm?
+            url "https://github.com/${{ github.repository }}/releases/download/$TAG/ksr-cli-darwin-arm64.tar.gz"
+            sha256 "$DARWIN_ARM64_SHA"
+          else
+            odie "ksr-cli is only supported on macOS"
+          end
+          
+          def install
+            bin.install "ksr-cli"
+            
+            # Generate completions
+            generate_completions_from_executable(bin/"ksr-cli", "completion")
+          end
+          
+          test do
+            system "#{bin}/ksr-cli", "help"
+          end
+        end
+        EOF
+        
+        cat homebrew-tap/Formula/ksr-cli.rb
+    
+    - name: Commit and push formula
+      working-directory: homebrew-tap
+      run: |
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        
+        git add Formula/ksr-cli.rb
+        git commit -m "Update ksr-cli to ${{ github.ref_name }}" || echo "No changes to commit"
+        git push
