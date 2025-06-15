@@ -153,7 +153,7 @@ jobs:
         Section: utils
         Priority: optional
         Architecture: $arch
-        Maintainer: Aywen Go <aywengo@gmail.com>
+        Maintainer: Roman Melnyk <aywengo@gmail.com>
         Description: CLI tool for Kafka Schema Registry
          A comprehensive command-line interface for managing Kafka Schema Registry.
          Provides commands to get, create, delete, and manage schemas, subjects, and configurations.
