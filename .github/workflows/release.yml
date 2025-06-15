@@ -42,7 +42,8 @@ jobs:
     - name: Run linting
       uses: golangci/golangci-lint-action@v3
       with:
-        version: latest
+        version: v1.54.2
+        args: --timeout=5m
 
   build:
     needs: test
