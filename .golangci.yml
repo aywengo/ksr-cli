@@ -1,0 +1,76 @@
+run:
+  # Timeout for analysis
+  timeout: 5m
+  # Exit code when at least one issue was found
+  issues-exit-code: 1
+  # Include test files
+  tests: true
+  # Skip directories
+  skip-dirs:
+    - vendor
+    - third_party
+  # Skip files
+  skip-files:
+    - ".*\\.pb\\.go$"
+    - ".*\\.gen\\.go$"
+
+output:
+  # Format of the output
+  format: colored-line-number
+  # Print lines of code with issue
+  print-issued-lines: true
+  # Print linter name in the end of issue text
+  print-linter-name: true
+
+linters:
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - typecheck
+    - unused
+    - gofmt
+    - goimports
+    - misspell
+  disable:
+    - structcheck # deprecated
+    - deadcode    # deprecated
+    - varcheck    # deprecated
+    - scopelint   # deprecated
+    - golint      # deprecated
+    - interfacer  # deprecated
+    - maligned    # deprecated
+    - nosnakecase # deprecated
+
+linters-settings:
+  errcheck:
+    # Report about not checking of errors in type assertions
+    check-type-assertions: true
+    # Report about assignment of errors to blank identifier
+    check-blank: false
+  govet:
+    # Report about shadowed variables
+    check-shadowing: true
+  gofmt:
+    # Simplify code
+    simplify: true
+  goimports:
+    # Put imports beginning with prefix after 3rd-party packages
+    local-prefixes: github.com/aywengo/ksr-cli
+
+issues:
+  # Maximum issues count per one linter
+  max-issues-per-linter: 50
+  # Maximum count of issues with the same text
+  max-same-issues: 3
+  # Exclude some linters from running on tests files
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - errcheck
+        - dupl
+    - path: cmd/
+      linters:
+        - forbidigo
