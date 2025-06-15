@@ -16,7 +16,6 @@ import (
 var (
 	exportFile        string
 	exportAllVersions bool
-	exportSubjects    []string
 	exportDirectory   string
 	includeConfig     bool
 )
