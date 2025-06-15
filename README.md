@@ -1,8 +1,7 @@
 # ksr-cli - Kafka Schema Registry CLI
 
-[![Build Status](https://github.com/aywengo/ksr-cli/workflows/Build/badge.svg)](https://github.com/aywengo/ksr-cli/actions)
-[![Release](https://github.com/aywengo/ksr-cli/workflows/Release/badge.svg)](https://github.com/aywengo/ksr-cli/releases)
-[![Go Report Card](https://goreportcard.com/badge/github.com/aywengo/ksr-cli)](https://goreportcard.com/report/github.com/aywengo/ksr-cli)
+[![Release](https://img.shields.io/github/v/release/aywengo/ksr-cli)](https://github.com/aywengo/ksr-cli/releases)
+[![Go Version](https://img.shields.io/badge/go-1.21+-blue.svg)](https://golang.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A comprehensive command-line interface for managing Kafka Schema Registry. Built with Go for cross-platform compatibility and distributed via Homebrew and APT repositories.
@@ -26,23 +25,24 @@ A comprehensive command-line interface for managing Kafka Schema Registry. Built
 ### Homebrew (macOS and Linux)
 
 ```bash
-# Add the tap
-brew tap aywengo/ksr-cli
-
 # Install ksr-cli
-brew install ksr-cli
+brew install aywengo/tap/ksr-cli
+
+# Verify installation
+ksr-cli --version
 ```
 
 ### APT (Ubuntu/Debian)
 
 ```bash
-# Add the repository
-curl -fsSL https://your-repo.com/gpg-key | sudo apt-key add -
-echo "deb https://your-repo.com/apt stable main" | sudo tee /etc/apt/sources.list.d/ksr-cli.list
+# Download the latest .deb package
+wget https://github.com/aywengo/ksr-cli/releases/latest/download/ksr-cli_0.1.1_amd64.deb
 
-# Update and install
-sudo apt update
-sudo apt install ksr-cli
+# Install the package
+sudo dpkg -i ksr-cli_0.1.1_amd64.deb
+
+# Verify installation
+ksr-cli --version
 ```
 
 ### Manual Installation
@@ -50,10 +50,27 @@ sudo apt install ksr-cli
 Download the appropriate binary for your platform from the [releases page](https://github.com/aywengo/ksr-cli/releases):
 
 ```bash
-# Download and install (replace with actual version and platform)
-curl -LO https://github.com/aywengo/ksr-cli/releases/download/v0.1.0/ksr-cli-linux-amd64.tar.gz
+# Linux AMD64
+wget https://github.com/aywengo/ksr-cli/releases/latest/download/ksr-cli-linux-amd64.tar.gz
 tar xzf ksr-cli-linux-amd64.tar.gz
+chmod +x ksr-cli
 sudo mv ksr-cli /usr/local/bin/
+
+# macOS Intel
+wget https://github.com/aywengo/ksr-cli/releases/latest/download/ksr-cli-darwin-amd64.tar.gz
+tar xzf ksr-cli-darwin-amd64.tar.gz
+chmod +x ksr-cli
+sudo mv ksr-cli /usr/local/bin/
+
+# macOS Apple Silicon
+wget https://github.com/aywengo/ksr-cli/releases/latest/download/ksr-cli-darwin-arm64.tar.gz
+tar xzf ksr-cli-darwin-arm64.tar.gz
+chmod +x ksr-cli
+sudo mv ksr-cli /usr/local/bin/
+
+# Windows
+# Download ksr-cli-windows-amd64.tar.gz from releases page
+# Extract and add to PATH
 ```
 
 ### Build from Source
@@ -62,380 +79,347 @@ sudo mv ksr-cli /usr/local/bin/
 git clone https://github.com/aywengo/ksr-cli.git
 cd ksr-cli
 make build
+sudo make install
 ```
 
 ## Quick Start
 
-1. **Initialize configuration:**
+1. **Check connection to Schema Registry:**
    ```bash
-   ksr-cli config init
+   ksr-cli check
    ```
 
-2. **Set your Schema Registry URL:**
+2. **Set your Schema Registry URL (if not using default localhost:8081):**
    ```bash
-   ksr-cli config set registry-url http://localhost:8081
+   # Using environment variable
+   export KSR_REGISTRY_URL=http://your-registry:8081
+   
+   # Or create a config file
+   echo "registry-url: http://your-registry:8081" > ~/.ksr-cli.yaml
    ```
 
 3. **List all subjects:**
    ```bash
-   ksr-cli get subjects
+   ksr-cli subjects list
    ```
 
 4. **Get a schema:**
    ```bash
-   ksr-cli get schemas my-subject
+   ksr-cli schema get my-subject
    ```
 
 ## Usage
 
 ### Available Commands
 
-**Schema Operations:**
-- `ksr-cli get subjects` - List all subjects
-- `ksr-cli get schemas [SUBJECT]` - Get schemas
-- `ksr-cli get versions SUBJECT` - Get versions for a subject
-- `ksr-cli create schema SUBJECT` - Register a new schema
-- `ksr-cli check compatibility SUBJECT` - Check schema compatibility
+**Connection Check:**
+- `ksr-cli check` - Verify connection to Schema Registry
 
-**Import/Export Operations:**
-- `ksr-cli export subjects` - Export all subjects and schemas
-- `ksr-cli export subject SUBJECT` - Export a specific subject
-- `ksr-cli import subjects` - Import subjects and schemas from file
-- `ksr-cli import subject` - Import a specific subject from file
+**Schema Operations:**
+- `ksr-cli subjects list` - List all subjects
+- `ksr-cli schema get SUBJECT [--version VERSION]` - Get schema for a subject
+- `ksr-cli schema register SUBJECT --file schema.avsc` - Register a new schema
+- `ksr-cli schema delete SUBJECT [--version VERSION]` - Delete a schema
+- `ksr-cli subject delete SUBJECT` - Delete a subject and all its schemas
+- `ksr-cli compatibility check SUBJECT --file schema.avsc` - Check schema compatibility
 
 **Configuration Management:**
-- `ksr-cli get config [SUBJECT]` - Get configuration
-- `ksr-cli config set KEY VALUE` - Set CLI configuration
+- `ksr-cli config get [--subject SUBJECT]` - Get global or subject configuration
+- `ksr-cli config set [--subject SUBJECT] --compatibility LEVEL` - Set compatibility level
 
 **Mode Management:**
-- `ksr-cli get mode [SUBJECT]` - Get mode configuration
-- `ksr-cli set mode [SUBJECT] MODE` - Set mode configuration
+- `ksr-cli mode get [--subject SUBJECT]` - Get mode (READWRITE/READONLY/IMPORT)
+- `ksr-cli mode set MODE [--subject SUBJECT]` - Set mode
 
 **Context Operations:**
+- `ksr-cli contexts list` - List available contexts
 - All commands support `--context` flag for multi-tenant environments
+
+**Import/Export Operations:**
+- `ksr-cli export subjects [--all-versions] [-f backup.json]` - Export schemas
+- `ksr-cli export subject SUBJECT [--all-versions] [-f subject.json]` - Export specific subject
+- `ksr-cli import subjects --file backup.json` - Import schemas (future release)
 
 ### Configuration
 
-ksr-cli uses a configuration file to store connection details and preferences. The configuration file is located at `~/.ksr-cli.yaml` by default.
+ksr-cli can be configured through multiple methods (in order of precedence):
+1. Command-line flags
+2. Environment variables (prefixed with `KSR_`)
+3. Configuration file (`~/.ksr-cli.yaml`)
 
-```bash
-# Initialize configuration
-ksr-cli config init
+**Configuration File Example:**
+```yaml
+registry-url: http://localhost:8081
+output: table  # json, yaml, or table
+context: production  # default context
+timeout: 30s
+insecure: false
 
-# Set registry URL
-ksr-cli config set registry-url http://localhost:8081
-
-# Set authentication (choose one)
-ksr-cli config set username myuser
-ksr-cli config set password mypass
-# OR
-ksr-cli config set api-key your-api-key
-
-# Set default output format
-ksr-cli config set output json
-
-# View all configuration
-ksr-cli config list
+# Authentication (optional)
+auth:
+  username: myuser
+  password: mypass
+  # OR use API key
+  api-key: your-api-key
 ```
 
-### Getting Schemas and Subjects
+**Environment Variables:**
+```bash
+export KSR_REGISTRY_URL=http://localhost:8081
+export KSR_OUTPUT=json
+export KSR_CONTEXT=production
+export KSR_USERNAME=myuser
+export KSR_PASSWORD=mypass
+```
+
+### Working with Schemas
 
 ```bash
 # List all subjects
-ksr-cli get subjects
+ksr-cli subjects list
 
 # Get latest schema for a subject
-ksr-cli get schemas my-subject
+ksr-cli schema get my-subject
 
 # Get specific schema version
-ksr-cli get schemas my-subject --version 2
+ksr-cli schema get my-subject --version 2
 
-# Get all versions of a schema
-ksr-cli get schemas my-subject --all
-ksr-cli get schemas my-subject --all-versions
+# Register a new schema from file
+ksr-cli schema register my-subject --file schema.avsc
 
-# Get all versions for a subject
-ksr-cli get versions my-subject
+# Register a JSON schema
+ksr-cli schema register my-subject --file schema.json --type JSON
+
+# Check if a new schema is compatible
+ksr-cli compatibility check my-subject --file new-schema.avsc
+
+# Delete a specific version
+ksr-cli schema delete my-subject --version 1
+
+# Delete entire subject
+ksr-cli subject delete my-subject
 ```
 
-### Creating Schemas
+### Compatibility Management
 
 ```bash
-# Register schema from file
-ksr-cli create schema my-subject --file schema.avsc
+# Get global compatibility level
+ksr-cli config get
 
-# Register schema from string
-ksr-cli create schema my-subject --schema '{"type":"string"}'
+# Set global compatibility
+ksr-cli config set --compatibility BACKWARD
 
-# Register JSON schema
-ksr-cli create schema my-subject --file schema.json --type JSON
+# Get subject-specific compatibility
+ksr-cli config get --subject my-subject
 
-# Register schema from stdin
-cat schema.avsc | ksr-cli create schema my-subject
+# Set subject-specific compatibility
+ksr-cli config set --subject my-subject --compatibility NONE
+
+# Available compatibility levels:
+# - BACKWARD (default)
+# - BACKWARD_TRANSITIVE
+# - FORWARD
+# - FORWARD_TRANSITIVE
+# - FULL
+# - FULL_TRANSITIVE
+# - NONE
 ```
 
-### Compatibility Checking
+### Schema Registry Modes
 
 ```bash
-# Check if schema is compatible
-ksr-cli check compatibility my-subject --file new-schema.avsc
+# Get current mode
+ksr-cli mode get
 
-# Check compatibility with inline schema
-ksr-cli check compatibility my-subject --schema '{"type":"string"}'
+# Set to read-only mode
+ksr-cli mode set READONLY
+
+# Set back to normal mode
+ksr-cli mode set READWRITE
+
+# Set import mode (for importing with specific IDs)
+ksr-cli mode set IMPORT
+
+# Set mode for specific subject
+ksr-cli mode set --subject my-subject READONLY
 ```
 
-### Import/Export Operations
-
-ksr-cli provides comprehensive import and export functionality for schemas and subjects, making it easy to backup, migrate, or synchronize Schema Registry instances.
-
-#### Exporting Schemas
+### Context Support (Multi-tenant)
 
 ```bash
-# Export all subjects (latest versions only)
-ksr-cli export subjects
+# List available contexts
+ksr-cli contexts list
 
-# Export all subjects to a file
-ksr-cli export subjects --file backup.json
+# Use specific context for a command
+ksr-cli subjects list --context production
+
+# Set default context in config
+echo "context: production" >> ~/.ksr-cli.yaml
+
+# Export schemas from one context
+ksr-cli export subjects --context production -f prod-backup.json
+
+# Work with different contexts
+ksr-cli schema get my-subject --context development
+ksr-cli schema get my-subject --context staging
+ksr-cli schema get my-subject --context production
+```
+
+### Import/Export
+
+```bash
+# Export all subjects (latest versions)
+ksr-cli export subjects -f backup.json
 
 # Export all subjects with all versions
-ksr-cli export subjects --all-versions
+ksr-cli export subjects --all-versions -f full-backup.json
 
-# Export all subjects to separate files in a directory
-ksr-cli export subjects --directory ./backup/
+# Export specific subject
+ksr-cli export subject my-subject -f my-subject.json
 
-# Export a specific subject
-ksr-cli export subject my-subject
+# Export to directory (one file per subject)
+ksr-cli export subjects --directory ./schemas/
 
-# Export a specific subject with all versions
-ksr-cli export subject my-subject --all-versions
+# Export in YAML format
+ksr-cli export subjects --output yaml -f backup.yaml
 
-# Export subject to file
-ksr-cli export subject my-subject --file my-subject-backup.json
-
-# Export with configuration included (default)
-ksr-cli export subjects --include-config
-
-# Export without configuration
-ksr-cli export subjects --include-config=false
-
-# Export in different formats
-ksr-cli export subjects --output yaml --file backup.yaml
-```
-
-#### Importing Schemas
-
-```bash
-# Import subjects from file
-ksr-cli import subjects --file backup.json
-
-# Import from directory (all JSON files)
-ksr-cli import subjects --directory ./backup/
-
-# Import a single subject
-ksr-cli import subject --file my-subject-backup.json
-
-# Preview import without making changes
-ksr-cli import subjects --file backup.json --dry-run
-
-# Skip existing schemas during import
-ksr-cli import subjects --file backup.json --skip-existing
-
-# Import to different context
-ksr-cli import subjects --file backup.json --import-context staging
-
-# Force import even in read-only mode
-ksr-cli import subjects --file backup.json --force
-```
-
-#### Export File Format
-
-Exported data uses a structured JSON format that includes metadata, schemas, and configurations:
-
-```json
-{
-  "metadata": {
-    "exported_at": "2024-01-15T10:30:00Z",
-    "context": "production",
-    "registry_url": "http://localhost:8081",
-    "cli_version": "v1.0.0"
-  },
-  "config": {
-    "compatibility": "BACKWARD"
-  },
-  "subjects": [
-    {
-      "name": "my-subject",
-      "config": {
-        "compatibility": "FORWARD"
-      },
-      "versions": [
-        {
-          "id": 1,
-          "version": 1,
-          "schema": "{\"type\":\"record\",\"name\":\"MyRecord\",\"fields\":[]}",
-          "schema_type": "AVRO",
-          "references": []
-        }
-      ]
-    }
-  ]
-}
-```
-
-#### Migration Examples
-
-```bash
-# Backup production registry
-ksr-cli export subjects --all-versions --file prod-backup.json --context production
-
-# Migrate to staging
-ksr-cli import subjects --file prod-backup.json --import-context staging --skip-existing
-
-# Copy specific subject between environments
-ksr-cli export subject user-events --context production --all-versions --file user-events.json
-ksr-cli import subject --file user-events.json --import-context development
-
-# Synchronize registries (dry-run first)
-ksr-cli export subjects --context production --all-versions --file sync.json
-ksr-cli import subjects --file sync.json --context staging --dry-run
-ksr-cli import subjects --file sync.json --context staging --skip-existing
-```
-
-### Configuration Management
-
-```bash
-# Get global configuration
-ksr-cli get config
-
-# Get subject-specific configuration
-ksr-cli get config my-subject
-```
-
-### Mode Management
-
-Schema Registry supports different modes that control its behavior:
-
-```bash
-# Get global mode
-ksr-cli get mode
-
-# Get subject-specific mode
-ksr-cli get mode my-subject
-
-# Set global mode
-ksr-cli set mode READWRITE
-ksr-cli set mode READONLY
-ksr-cli set mode IMPORT
-
-# Set subject-specific mode
-ksr-cli set mode my-subject READWRITE
-ksr-cli set mode my-subject READONLY
-```
-
-**Available Modes:**
-- **READWRITE**: Normal operation (default) - allows all operations
-- **READONLY**: Only read operations are allowed - no schema registration or updates
-- **IMPORT**: Schema Registry is in import mode - allows importing schemas with specific IDs
-
-### Context Support
-
-ksr-cli supports Schema Registry contexts for multi-tenant environments. You can set a default context in your configuration and override it per command when needed.
-
-```bash
-# Set default context for all operations
-ksr-cli config set context production
-
-# All commands now use 'production' context by default
-ksr-cli get subjects
-ksr-cli create schema my-subject --file schema.avsc
-ksr-cli check compatibility my-subject --file new-schema.avsc
-
-# Override context for specific commands
-ksr-cli get subjects --context staging
-ksr-cli get schemas my-subject --context development
-
-# Check current default context
-ksr-cli config get context
-
-# Reset to default context (.)
-ksr-cli config set context .
-
-# List subjects in multiple contexts
-ksr-cli get subjects --context production
-ksr-cli get subjects --context staging
-ksr-cli get subjects --context development
-```
-
-**Context Configuration Examples:**
-```bash
-# Development workflow
-ksr-cli config set context development
-ksr-cli config set registry-url http://dev-schema-registry:8081
-
-# Production workflow  
-ksr-cli config set context production
-ksr-cli config set registry-url http://prod-schema-registry:8081
-
-# Multi-environment operations
-ksr-cli get subjects --context production --output json > prod-subjects.json
-ksr-cli get subjects --context staging --output json > staging-subjects.json
+# Include/exclude configurations
+ksr-cli export subjects --include-config=false -f schemas-only.json
 ```
 
 ### Output Formats
 
-ksr-cli supports multiple output formats:
-
 ```bash
 # Table format (default)
-ksr-cli get subjects
+ksr-cli subjects list
 
 # JSON format
-ksr-cli get subjects --output json
+ksr-cli subjects list --output json
 
 # YAML format
-ksr-cli get subjects --output yaml
-```
+ksr-cli subjects list --output yaml
 
-## Configuration File
-
-The configuration file (`~/.ksr-cli.yaml`) supports the following options:
-
-```yaml
-registry-url: http://localhost:8081
-username: myuser
-password: mypass
-api-key: your-api-key
-output: table
-timeout: 30s
-insecure: false
-context: production  # Default context for all operations
-```
-
-## Environment Variables
-
-Configuration can also be set via environment variables with the `KSR_` prefix:
-
-```bash
-export KSR_REGISTRY_URL=http://localhost:8081
-export KSR_USERNAME=myuser
-export KSR_PASSWORD=mypass
-export KSR_OUTPUT=json
-export KSR_CONTEXT=production
+# Pretty-printed JSON
+ksr-cli subjects list -o json | jq .
 ```
 
 ## Shell Completion
 
-Enable shell completion for a better CLI experience:
+Enable shell completion for better CLI experience:
 
 ```bash
 # Bash
-echo 'source <(ksr-cli completion bash)' >> ~/.bashrc
+ksr-cli completion bash > /etc/bash_completion.d/ksr-cli
 
 # Zsh
-echo 'source <(ksr-cli completion zsh)' >> ~/.zshrc
+ksr-cli completion zsh > "${fpath[1]}/_ksr-cli"
 
 # Fish
-ksr-cli completion fish | source
+ksr-cli completion fish > ~/.config/fish/completions/ksr-cli.fish
+
+# PowerShell
+ksr-cli completion powershell > ksr-cli.ps1
+# Then add to your profile: . ./ksr-cli.ps1
+```
+
+## Advanced Usage
+
+### Scripting Examples
+
+**Backup all schemas:**
+```bash
+#!/bin/bash
+BACKUP_DIR="schema-backups/$(date +%Y%m%d)"
+mkdir -p "$BACKUP_DIR"
+
+# Export all schemas with versions
+ksr-cli export subjects --all-versions -f "$BACKUP_DIR/all-schemas.json"
+
+# Also export individual subjects
+for subject in $(ksr-cli subjects list -o json | jq -r '.[]'); do
+  ksr-cli export subject "$subject" --all-versions -f "$BACKUP_DIR/$subject.json"
+done
+```
+
+**Check compatibility before deployment:**
+```bash
+#!/bin/bash
+SUBJECT="my-service-value"
+SCHEMA_FILE="schemas/my-service.avsc"
+
+if ksr-cli compatibility check "$SUBJECT" --file "$SCHEMA_FILE"; then
+  echo "✅ Schema is compatible"
+  ksr-cli schema register "$SUBJECT" --file "$SCHEMA_FILE"
+else
+  echo "❌ Schema is NOT compatible"
+  exit 1
+fi
+```
+
+**Monitor Schema Registry:**
+```bash
+#!/bin/bash
+# Check if Schema Registry is accessible
+if ! ksr-cli check > /dev/null 2>&1; then
+  echo "❌ Schema Registry is not accessible"
+  exit 1
+fi
+
+# Get registry mode
+MODE=$(ksr-cli mode get -o json | jq -r .mode)
+if [ "$MODE" != "READWRITE" ]; then
+  echo "⚠️  Registry is in $MODE mode"
+fi
+
+# Count subjects
+COUNT=$(ksr-cli subjects list -o json | jq '. | length')
+echo "📊 Total subjects: $COUNT"
+```
+
+## Troubleshooting
+
+### Connection Issues
+
+```bash
+# Test connection with verbose output
+ksr-cli check
+
+# Check with custom URL
+KSR_REGISTRY_URL=http://localhost:8081 ksr-cli check
+
+# Ignore SSL certificate errors (development only!)
+ksr-cli check --insecure
+```
+
+### Authentication
+
+```bash
+# Basic authentication via URL
+export KSR_REGISTRY_URL=http://user:pass@localhost:8081
+
+# Basic authentication via config
+cat >> ~/.ksr-cli.yaml << EOF
+auth:
+  username: myuser
+  password: mypass
+EOF
+
+# API key authentication
+cat >> ~/.ksr-cli.yaml << EOF
+auth:
+  api-key: your-api-key
+EOF
+```
+
+### Debug Output
+
+```bash
+# Enable debug logging
+export KSR_LOG_LEVEL=debug
+ksr-cli subjects list
+
+# Verbose curl-like output
+ksr-cli subjects list --verbose
 ```
 
 ## Development
@@ -444,85 +428,56 @@ ksr-cli completion fish | source
 
 - Go 1.21 or later
 - Make
-- golangci-lint (for linting)
+- Docker and Docker Compose (for integration tests)
 
 ### Building
 
 ```bash
-# Install development dependencies
-make dev-setup
+# Clone the repository
+git clone https://github.com/aywengo/ksr-cli.git
+cd ksr-cli
 
-# Build for current platform
+# Install dependencies
+make deps
+
+# Build binary
 make build
-
-# Build for all platforms
-make build-all
 
 # Run tests
 make test
 
-# Run integration tests
-make test-integration
-
 # Run linting
 make lint
+
+# Build for all platforms
+make build-all
 ```
 
-### Integration Testing
-
-ksr-cli includes a comprehensive integration test suite that uses Docker Compose to create a realistic test environment:
+### Running Integration Tests
 
 ```bash
-# Run all integration tests
-bash tests/run-integration-tests.sh
+# Run integration test suite
+cd tests
+./run-integration-tests.sh
 
 # The test suite will:
-# 1. Build the CLI from source
-# 2. Start Kafka and Schema Registry via Docker Compose
-# 3. Configure the CLI to use the test environment
-# 4. Load test schemas from tests/test-data/schemas/
-# 5. Run integration tests including context functionality
-# 6. Clean up the test environment
+# 1. Start Kafka and Schema Registry in Docker
+# 2. Run integration tests
+# 3. Clean up containers
 ```
-
-**Test Environment Components:**
-- **Kafka** (KRaft mode) on port 39092
-- **Schema Registry** on port 38081
-- **AKHQ UI** on port 38080 for manual testing
-- **Test schemas** in `tests/test-data/schemas/`
-
-**Integration Test Coverage:**
-- Schema registration and retrieval
-- Context configuration and usage
-- CLI configuration management
-- Multi-format output validation
-- Error handling and edge cases
-
-For more details on the test environment, see [tests/README.md](tests/README.md).
 
 ### Contributing
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-### Project Structure
-
-```
-ksr-cli/
-├── cmd/                    # CLI commands
-├── internal/               # Internal packages
-│   ├── client/            # Schema Registry client
-│   ├── config/            # Configuration management
-│   └── output/            # Output formatters
-├── pkg/                   # Public packages
-├── scripts/               # Build and packaging scripts
-├── packaging/             # Distribution files
-├── .github/workflows/     # GitHub Actions
-└── docs/                  # Documentation
-```
+Please ensure:
+- All tests pass (`make test`)
+- Code is properly formatted (`make fmt`)
+- Linting passes (`make lint`)
 
 ## License
 
@@ -533,13 +488,15 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Cobra](https://github.com/spf13/cobra) for the CLI framework
 - [Viper](https://github.com/spf13/viper) for configuration management
 - [go-pretty](https://github.com/jedib0t/go-pretty) for table formatting
+- [testcontainers-go](https://github.com/testcontainers/testcontainers-go) for integration testing
 
 ## Support
 
-- 📖 [Documentation](docs/)
-- 🐛 [Issue Tracker](https://github.com/aywengo/ksr-cli/issues)
+- 🐛 [Report Issues](https://github.com/aywengo/ksr-cli/issues)
+- 💡 [Request Features](https://github.com/aywengo/ksr-cli/issues/new?labels=enhancement)
 - 💬 [Discussions](https://github.com/aywengo/ksr-cli/discussions)
+- 📖 [Wiki](https://github.com/aywengo/ksr-cli/wiki)
 
 ---
 
-Made with ❤️ for Kafka community
+Made with ❤️ by [Roman Melnyk](https://github.com/aywengo) for the Kafka community
