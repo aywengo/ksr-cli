@@ -1,0 +1,115 @@
+services:
+  # Development Kafka Cluster (Primary)
+  kafka-dev:
+    image: confluentinc/cp-kafka:7.6.0
+    hostname: kafka-dev
+    container_name: kafka-dev
+    ports:
+      - "9092:9092"      # Standard Kafka port for single-registry compatibility
+      - "9094:9094"      # Controller port
+      - "39092:39092"    # Alternative port for multi-registry
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-dev:9094
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_ALT://0.0.0.0:39092,CONTROLLER://0.0.0.0:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_ALT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-dev:9092,PLAINTEXT_ALT://localhost:39092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_LOG_DIRS: /tmp/kraft-combined-logs
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      CLUSTER_ID: "MkVlNjdqWVF0Q056MWFrUA"
+      KAFKA_INITIAL_BROKER_REGISTRATION_TIMEOUT_MS: 60000
+    command: >
+      bash -c "
+        echo 'Starting Kafka DEV cluster...' &&
+        /etc/confluent/docker/run"
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - kafka-test-network
+
+  # Development Schema Registry (Primary - compatible with single-registry tests)
+  schema-registry-dev:
+    image: confluentinc/cp-schema-registry:7.6.0
+    hostname: schema-registry-dev
+    container_name: schema-registry-dev
+    depends_on:
+      kafka-dev:
+        condition: service_healthy
+    ports:
+      - "38081:8081"     # Standard port used by all existing tests
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry-dev
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka-dev:9092
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_DELETE_SUBJECT_ENABLED: "true"
+      SCHEMA_REGISTRY_DELETE_VERSION_ENABLED: "true"
+      SCHEMA_REGISTRY_SCHEMA_COMPATIBILITY_LEVEL: "backward"
+      SCHEMA_REGISTRY_LOG4J_ROOT_LOGLEVEL: "INFO"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/subjects"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 45s
+    networks:
+      - kafka-test-network
+
+  # AKHQ UI for monitoring and management
+  akhq:
+    image: tchiotludo/akhq:0.25.1
+    container_name: akhq-ui
+    depends_on:
+      schema-registry-dev:
+        condition: service_healthy
+    ports:
+      - "38080:8080"
+    environment:
+      AKHQ_CONFIGURATION: |
+        akhq:
+          connections:
+            development:
+              properties:
+                bootstrap.servers: "kafka-dev:9092"
+              schema-registry:
+                url: "http://schema-registry-dev:8081"
+              connect:
+                - name: "dev-connect"
+                  url: "http://kafka-dev:8083"
+          ui-options:
+            topic:
+              default-view: ALL
+            topic-data:
+              sort: OLDEST
+          pagination:
+            page-size: 25
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    networks:
+      - kafka-test-network
+
+networks:
+  kafka-test-network:
+    name: kafka-test-network
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  kafka-dev-data:
+    name: kafka-dev-data

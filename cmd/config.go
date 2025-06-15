@@ -242,6 +242,9 @@ var configResetCmd = &cobra.Command{
 }
 
 func init() {
+	// Initialize viper configuration
+	initConfig()
+
 	rootCmd.AddCommand(configCmd)
 
 	// Add subcommands
@@ -253,6 +256,30 @@ func init() {
 	configCmd.AddCommand(configResetCmd)
 
 	configCmd.PersistentFlags().StringVarP(&outputFormat, "output", "o", "table", "Output format (table, json, yaml)")
+}
+
+// initConfig initializes viper configuration
+func initConfig() {
+	// Set config file name (without extension)
+	viper.SetConfigName(".ksr-cli")
+	viper.SetConfigType("yaml")
+
+	// Add config paths
+	viper.AddConfigPath(".")     // Current directory
+	viper.AddConfigPath("$HOME") // Home directory
+
+	// Set environment variable prefix
+	viper.SetEnvPrefix("KSR")
+	viper.AutomaticEnv()
+
+	// Read config file if it exists
+	if err := viper.ReadInConfig(); err != nil {
+		// Config file not found is okay, we'll create it when needed
+		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
+			// Config file was found but another error was produced
+			fmt.Printf("Error reading config file: %v\n", err)
+		}
+	}
 }
 
 var rootCmd = &cobra.Command{Use: "ksr-cli"}
