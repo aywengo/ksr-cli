@@ -1,9 +1,9 @@
 module github.com/aywengo/ksr-cli
 
-go 1.21
+go 1.23.0
 
 require (
-	github.com/jedib0t/go-pretty/v6 v6.5.4
+	github.com/jedib0t/go-pretty/v6 v6.6.7
 	github.com/spf13/cobra v1.9.1
 	github.com/spf13/viper v1.20.1
 	golang.org/x/text v0.26.0
