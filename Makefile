@@ -85,8 +85,7 @@ build-all: clean
 		mkdir -p $$output_path; \
 		GOOS=$$GOOS GOARCH=$$GOARCH $(GOBUILD) $(LDFLAGS) -o $$output_path/$$output_name .; \
 		if [ $$? -ne 0 ]; then echo "Build failed for $$platform"; exit 1; fi; \
-		cd $(DIST_DIR) && tar -czf $(BINARY_NAME)-$(VERSION)-$$GOOS-$$GOARCH.tar.gz $(BINARY_NAME)-$(VERSION)-$$GOOS-$$GOARCH/; \
-		cd ../..; \
+		(cd $(DIST_DIR) && tar -czf $(BINARY_NAME)-$(VERSION)-$$GOOS-$$GOARCH.tar.gz $(BINARY_NAME)-$(VERSION)-$$GOOS-$$GOARCH/); \
 	done
 
 # Install locally

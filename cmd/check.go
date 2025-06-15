@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/spf13/cobra"
 	"github.com/aywengo/ksr-cli/internal/client"
 	"github.com/aywengo/ksr-cli/internal/output"
+	"github.com/spf13/cobra"
 )
 
 // checkCmd represents the check command
@@ -95,4 +95,5 @@ func init() {
 	checkCompatibilityCmd.Flags().StringVar(&schemaString, "schema", "", "Schema content as string")
 	checkCompatibilityCmd.Flags().StringVarP(&schemaType, "type", "t", "AVRO", "Schema type (AVRO, JSON, PROTOBUF)")
 	checkCompatibilityCmd.Flags().StringVar(&context, "context", "", "Schema Registry context")
+	checkCmd.PersistentFlags().StringVarP(&outputFormat, "output", "o", "table", "Output format (table, json, yaml)")
 }

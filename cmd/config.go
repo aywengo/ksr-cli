@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/aywengo/ksr-cli/internal/config"
 	"github.com/aywengo/ksr-cli/internal/output"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // configCmd represents the config command
@@ -136,7 +136,7 @@ var configListCmd = &cobra.Command{
 	Long:  `List all configuration values from the config file and environment variables.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		settings := config.AllSettings()
-		
+
 		if len(settings) == 0 {
 			fmt.Println("No configuration found")
 			return nil
@@ -209,7 +209,7 @@ var configValidateCmd = &cobra.Command{
 
 		// Test connectivity
 		fmt.Println("\nTesting connectivity...")
-		
+
 		// This would typically test the connection, but since we're in cmd package
 		// and don't want to create circular dependencies, we'll just show the config
 		fmt.Println("To test connectivity, run: ksr-cli get subjects")
@@ -251,4 +251,13 @@ func init() {
 	configCmd.AddCommand(configInitCmd)
 	configCmd.AddCommand(configValidateCmd)
 	configCmd.AddCommand(configResetCmd)
+
+	configCmd.PersistentFlags().StringVarP(&outputFormat, "output", "o", "table", "Output format (table, json, yaml)")
+}
+
+var rootCmd = &cobra.Command{Use: "ksr-cli"}
+
+// Execute executes the root command.
+func Execute() error {
+	return rootCmd.Execute()
 }

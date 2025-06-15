@@ -1,6 +1,8 @@
 package config
 
 import (
+	"log"
+
 	"github.com/spf13/viper"
 )
 
@@ -42,7 +44,10 @@ type Config struct {
 // GetConfig returns the current configuration
 func GetConfig() *Config {
 	var cfg Config
-	viper.Unmarshal(&cfg)
+	if err := viper.Unmarshal(&cfg); err != nil {
+		log.Printf("failed to unmarshal config: %v", err)
+		return &Config{}
+	}
 	return &cfg
 }
 

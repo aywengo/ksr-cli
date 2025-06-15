@@ -9,6 +9,8 @@ import (
 	"strings"
 
 	"github.com/jedib0t/go-pretty/v6/table"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"gopkg.in/yaml.v3"
 )
 
@@ -63,11 +65,11 @@ func printStringSliceTable(data []string) error {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 	t.AppendHeader(table.Row{"Subjects"})
-	
+
 	for _, item := range data {
 		t.AppendRow(table.Row{item})
 	}
-	
+
 	t.Render()
 	return nil
 }
@@ -77,11 +79,11 @@ func printIntSliceTable(data []int) error {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 	t.AppendHeader(table.Row{"Versions"})
-	
+
 	for _, item := range data {
 		t.AppendRow(table.Row{strconv.Itoa(item)})
 	}
-	
+
 	t.Render()
 	return nil
 }
@@ -111,10 +113,10 @@ func printInterfaceSliceTable(data []interface{}, t table.Writer) error {
 func printGenericTable(data interface{}, t table.Writer) error {
 	headers := getHeaders(data)
 	t.AppendHeader(headers)
-	
+
 	row := getRow(data, headers)
 	t.AppendRow(row)
-	
+
 	t.Render()
 	return nil
 }
@@ -152,7 +154,7 @@ func getHeaders(data interface{}) table.Row {
 						name = jsonTag
 					}
 				}
-				headers = append(headers, strings.Title(name))
+				headers = append(headers, cases.Title(language.Und).String(name))
 			}
 		}
 		return headers

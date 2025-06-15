@@ -6,9 +6,9 @@ import (
 	"io"
 	"os"
 
-	"github.com/spf13/cobra"
 	"github.com/aywengo/ksr-cli/internal/client"
 	"github.com/aywengo/ksr-cli/internal/output"
+	"github.com/spf13/cobra"
 )
 
 var (

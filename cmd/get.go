@@ -3,16 +3,18 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
 	"github.com/aywengo/ksr-cli/internal/client"
 	"github.com/aywengo/ksr-cli/internal/output"
+	"github.com/spf13/cobra"
 )
 
 var (
-	version   string
-	context   string
+	version     string
+	context     string
 	allVersions bool
 )
+
+var outputFormat string
 
 // getCmd represents the get command
 var getCmd = &cobra.Command{
@@ -177,7 +179,8 @@ func init() {
 	// Flags for schemas command
 	getSchemasCmd.Flags().StringVarP(&version, "version", "V", "", "Schema version")
 	getSchemasCmd.Flags().BoolVar(&allVersions, "all", false, "Get all versions")
-	
+
 	// Global flags for all get commands
 	getCmd.PersistentFlags().StringVar(&context, "context", "", "Schema Registry context")
+	getCmd.PersistentFlags().StringVarP(&outputFormat, "output", "o", "table", "Output format (table, json, yaml)")
 }

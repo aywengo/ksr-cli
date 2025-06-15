@@ -242,6 +242,9 @@ ksr-cli completion fish | source
 ### Building
 
 ```bash
+# Install development dependencies
+make dev-setup
+
 # Build for current platform
 make build
 
@@ -253,9 +256,6 @@ make test
 
 # Run linting
 make lint
-
-# Install development dependencies
-make dev-setup
 ```
 
 ### Contributing
@@ -300,4 +300,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-Made with ❤️ by the ksr-cli contributors
+Made with ❤️ for Kafka community
