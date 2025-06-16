@@ -54,7 +54,7 @@ Examples:
 		}
 
 		// Create client
-		c, err := client.NewClient()
+		c, err := createClientWithFlags()
 		if err != nil {
 			return fmt.Errorf("failed to create client: %w", err)
 		}

@@ -147,6 +147,21 @@ ksr-cli can be configured through multiple methods (in order of precedence):
 2. Environment variables (prefixed with `KSR_`)
 3. Configuration file (`~/.ksr-cli.yaml`)
 
+**Global Command-line Flags:**
+```bash
+# Registry connection
+--registry-url string   # Schema Registry instance URL (overrides config)
+
+# Authentication
+--user string          # Username for authentication (overrides config)
+--pass string          # Password for authentication (overrides config)  
+--api-key string       # API key for authentication (overrides config)
+
+# Other flags
+--verbose              # Enable verbose logging
+--insecure             # Skip TLS certificate verification
+```
+
 **Configuration File Example:**
 ```yaml
 registry-url: http://localhost:8081
@@ -156,11 +171,10 @@ timeout: 30s
 insecure: false
 
 # Authentication (optional)
-auth:
-  username: myuser
-  password: mypass
-  # OR use API key
-  api-key: your-api-key
+username: myuser
+password: mypass
+# OR use API key
+api-key: your-api-key
 ```
 
 **Environment Variables:**
@@ -170,34 +184,38 @@ export KSR_OUTPUT=json
 export KSR_CONTEXT=production
 export KSR_USERNAME=myuser
 export KSR_PASSWORD=mypass
+export KSR_API_KEY=your-api-key
 ```
 
 ### Working with Schemas
 
 ```bash
 # List all subjects
-ksr-cli subjects list
+ksr-cli get subjects
+
+# Using custom registry URL and authentication
+ksr-cli get subjects --registry-url http://registry.example.com:8081 --user admin --pass secret
 
 # Get latest schema for a subject
-ksr-cli schema get my-subject
+ksr-cli get schemas my-subject
 
-# Get specific schema version
-ksr-cli schema get my-subject --version 2
+# Get specific schema version with API key authentication
+ksr-cli get schemas my-subject --version 2 --api-key your-api-key
 
-# Register a new schema from file
-ksr-cli schema register my-subject --file schema.avsc
+# Register a new schema from file with authentication
+ksr-cli create schema my-subject --file schema.avsc --registry-url http://localhost:8081 --user myuser --pass mypass
 
 # Register a JSON schema
-ksr-cli schema register my-subject --file schema.json --type JSON
+ksr-cli create schema my-subject --file schema.json --schema-type JSON
 
 # Check if a new schema is compatible
-ksr-cli compatibility check my-subject --file new-schema.avsc
+ksr-cli check compatibility my-subject --file new-schema.avsc
 
 # Delete a specific version
-ksr-cli schema delete my-subject --version 1
+ksr-cli set delete my-subject --version 1
 
 # Delete entire subject
-ksr-cli subject delete my-subject
+ksr-cli set delete my-subject
 ```
 
 ### Compatibility Management
@@ -346,10 +364,19 @@ done
 #!/bin/bash
 SUBJECT="my-service-value"
 SCHEMA_FILE="schemas/my-service.avsc"
+REGISTRY_URL="http://schema-registry:8081"
+API_KEY="${SCHEMA_REGISTRY_API_KEY}"
 
-if ksr-cli compatibility check "$SUBJECT" --file "$SCHEMA_FILE"; then
+# Use command-line flags for CI/CD environments
+if ksr-cli check compatibility "$SUBJECT" \
+    --file "$SCHEMA_FILE" \
+    --registry-url "$REGISTRY_URL" \
+    --api-key "$API_KEY"; then
   echo "✅ Schema is compatible"
-  ksr-cli schema register "$SUBJECT" --file "$SCHEMA_FILE"
+  ksr-cli create schema "$SUBJECT" \
+    --file "$SCHEMA_FILE" \
+    --registry-url "$REGISTRY_URL" \
+    --api-key "$API_KEY"
 else
   echo "❌ Schema is NOT compatible"
   exit 1
@@ -382,32 +409,56 @@ echo "📊 Total subjects: $COUNT"
 
 ```bash
 # Test connection with verbose output
-ksr-cli check
+ksr-cli check --verbose
 
-# Check with custom URL
+# Check with custom URL using command-line flag
+ksr-cli check --registry-url http://localhost:8081
+
+# Check with authentication
+ksr-cli check --registry-url http://localhost:8081 --user myuser --pass mypass
+
+# Check with API key
+ksr-cli check --registry-url http://localhost:8081 --api-key your-api-key
+
+# Check with custom URL using environment variable
 KSR_REGISTRY_URL=http://localhost:8081 ksr-cli check
 
 # Ignore SSL certificate errors (development only!)
-ksr-cli check --insecure
+ksr-cli check --insecure --registry-url https://localhost:8081
 ```
 
 ### Authentication
 
 ```bash
+# Using command-line flags (highest precedence)
+ksr-cli get subjects --registry-url http://localhost:8081 --user myuser --pass mypass
+
+# Using API key via command-line
+ksr-cli get subjects --registry-url http://localhost:8081 --api-key your-api-key
+
 # Basic authentication via URL
 export KSR_REGISTRY_URL=http://user:pass@localhost:8081
 
-# Basic authentication via config
+# Basic authentication via environment variables
+export KSR_REGISTRY_URL=http://localhost:8081
+export KSR_USERNAME=myuser
+export KSR_PASSWORD=mypass
+
+# API key via environment variable
+export KSR_REGISTRY_URL=http://localhost:8081
+export KSR_API_KEY=your-api-key
+
+# Basic authentication via config file
 cat >> ~/.ksr-cli.yaml << EOF
-auth:
-  username: myuser
-  password: mypass
+registry-url: http://localhost:8081
+username: myuser
+password: mypass
 EOF
 
-# API key authentication
+# API key authentication via config file
 cat >> ~/.ksr-cli.yaml << EOF
-auth:
-  api-key: your-api-key
+registry-url: http://localhost:8081
+api-key: your-api-key
 EOF
 ```
 

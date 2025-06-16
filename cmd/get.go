@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/aywengo/ksr-cli/internal/client"
 	"github.com/aywengo/ksr-cli/internal/config"
 	"github.com/aywengo/ksr-cli/internal/output"
 	"github.com/spf13/cobra"
@@ -41,7 +40,7 @@ Examples:
   ksr-cli get schemas my-subject --all-versions # Get all versions`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		c, err := client.NewClient()
+		c, err := createClientWithFlags()
 		if err != nil {
 			return fmt.Errorf("failed to create client: %w", err)
 		}
@@ -97,7 +96,7 @@ var getSubjectsCmd = &cobra.Command{
 	Short: "Get all subjects",
 	Long:  `Get a list of all subjects in the Schema Registry.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		c, err := client.NewClient()
+		c, err := createClientWithFlags()
 		if err != nil {
 			return fmt.Errorf("failed to create client: %w", err)
 		}
@@ -118,7 +117,7 @@ var getVersionsCmd = &cobra.Command{
 	Long:  `Get all available versions for a specific subject.`,
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		c, err := client.NewClient()
+		c, err := createClientWithFlags()
 		if err != nil {
 			return fmt.Errorf("failed to create client: %w", err)
 		}
@@ -144,7 +143,7 @@ Examples:
   ksr-cli get config my-subject # Get subject-specific configuration`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		c, err := client.NewClient()
+		c, err := createClientWithFlags()
 		if err != nil {
 			return fmt.Errorf("failed to create client: %w", err)
 		}
@@ -186,7 +185,7 @@ Examples:
   ksr-cli get mode my-subject # Get subject-specific mode`,
 	Args: cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		c, err := client.NewClient()
+		c, err := createClientWithFlags()
 		if err != nil {
 			return fmt.Errorf("failed to create client: %w", err)
 		}

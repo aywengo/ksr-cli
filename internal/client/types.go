@@ -2,6 +2,16 @@ package client
 
 import "encoding/json"
 
+// ClientConfig represents client connection configuration
+type ClientConfig struct {
+	BaseURL  string
+	Username string
+	Password string
+	APIKey   string
+	Timeout  string
+	Insecure bool
+}
+
 // Schema represents a schema in the Schema Registry
 type Schema struct {
 	ID         int             `json:"id"`

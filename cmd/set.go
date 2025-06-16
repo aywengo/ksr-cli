@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aywengo/ksr-cli/internal/client"
 	"github.com/aywengo/ksr-cli/internal/config"
 	"github.com/aywengo/ksr-cli/internal/output"
 	"github.com/spf13/cobra"
@@ -36,7 +35,7 @@ Examples:
   ksr-cli set mode my-subject READONLY # Set subject-specific mode`,
 	Args: cobra.RangeArgs(1, 2),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		c, err := client.NewClient()
+		c, err := createClientWithFlags()
 		if err != nil {
 			return fmt.Errorf("failed to create client: %w", err)
 		}

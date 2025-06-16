@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+
+	"github.com/aywengo/ksr-cli/internal/client"
+	"github.com/aywengo/ksr-cli/internal/config"
 )
 
 var (
@@ -46,4 +49,53 @@ func getSchemaContent() (string, error) {
 	}
 
 	return string(content), nil
+}
+
+// getEffectiveRegistryURL returns the registry URL to use (flag value or configured default)
+func getEffectiveRegistryURL() string {
+	if registryURL != "" {
+		return registryURL
+	}
+	return config.GetString(config.KeyRegistryURL)
+}
+
+// getEffectiveUsername returns the username to use (flag value or configured default)
+func getEffectiveUsername() string {
+	if user != "" {
+		return user
+	}
+	return config.GetString(config.KeyUsername)
+}
+
+// getEffectivePassword returns the password to use (flag value or configured default)
+func getEffectivePassword() string {
+	if pass != "" {
+		return pass
+	}
+	return config.GetString(config.KeyPassword)
+}
+
+// getEffectiveAPIKey returns the API key to use (flag value or configured default)
+func getEffectiveAPIKey() string {
+	if apiKey != "" {
+		return apiKey
+	}
+	return config.GetString(config.KeyAPIKey)
+}
+
+// createClientWithFlags creates a client using effective configuration values (flags override config)
+func createClientWithFlags() (*client.Client, error) {
+	registryURL := getEffectiveRegistryURL()
+	if registryURL == "" {
+		return nil, fmt.Errorf("registry URL is required (use --registry-url flag or configure with 'ksr-cli config set registry-url <url>')")
+	}
+
+	return client.NewClientWithConfig(&client.ClientConfig{
+		BaseURL:  registryURL,
+		Username: getEffectiveUsername(),
+		Password: getEffectivePassword(),
+		APIKey:   getEffectiveAPIKey(),
+		Timeout:  config.GetString(config.KeyTimeout),
+		Insecure: config.GetBool(config.KeyInsecure),
+	})
 }

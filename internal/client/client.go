@@ -42,6 +42,33 @@ func NewClient() (*Client, error) {
 	return client, nil
 }
 
+// NewClientWithConfig creates a new Schema Registry client with the provided configuration
+func NewClientWithConfig(config *ClientConfig) (*Client, error) {
+	if config.BaseURL == "" {
+		return nil, fmt.Errorf("registry URL is required")
+	}
+
+	// Parse timeout
+	timeout := 30 * time.Second
+	if config.Timeout != "" {
+		if parsedTimeout, err := time.ParseDuration(config.Timeout); err == nil {
+			timeout = parsedTimeout
+		}
+	}
+
+	client := &Client{
+		baseURL: strings.TrimRight(config.BaseURL, "/"),
+		httpClient: &http.Client{
+			Timeout: timeout,
+		},
+		username: config.Username,
+		password: config.Password,
+		apiKey:   config.APIKey,
+	}
+
+	return client, nil
+}
+
 // makeRequest performs an HTTP request to the Schema Registry
 func (c *Client) makeRequest(method, path string, body interface{}) (*http.Response, error) {
 	var bodyReader io.Reader

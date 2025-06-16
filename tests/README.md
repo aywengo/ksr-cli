@@ -19,6 +19,19 @@ bash tests/run-integration-tests.sh
 # 6. Cleans up test environment
 ```
 
+### Quick Flag Tests
+
+```bash
+# Run quick test for command-line flags (no Docker required)
+bash tests/test_flags_quick.sh
+
+# The quick test validates:
+# 1. Flag presence in help output
+# 2. Global flag availability in subcommands
+# 3. Error handling for missing configuration
+# 4. Flag syntax validation
+```
+
 ### Running Individual Test Suites
 
 ```bash
@@ -37,6 +50,8 @@ bash test_export_commands.sh
 bash test_import_commands.sh
 bash test_import_export_integration.sh
 bash test_all_versions_flag.sh
+bash test_command_line_flags.sh
+bash test_flag_precedence.sh
 
 # Or run all test suites together
 bash test_comprehensive.sh
@@ -110,6 +125,10 @@ The integration tests validate:
 - ✅ Command-line argument parsing
 - ✅ Authentication configuration
 - ✅ Schema type support (AVRO, JSON)
+- ✅ Command-line authentication flags (--user, --pass, --api-key)
+- ✅ Registry URL override flag (--registry-url)
+- ✅ Configuration precedence (flags > env > config)
+- ✅ Global flag availability across all commands
 
 #### Comprehensive Test Suites
 
@@ -204,6 +223,32 @@ The integration tests validate:
 - Export format compatibility with version flags
 - JSON structure validation for multi-version exports
 - Help documentation validation
+
+**tests/integration/test_command_line_flags.sh:**
+- Registry URL flag functionality (--registry-url)
+- Authentication flags (--user, --pass, --api-key)
+- Flag validation and error handling
+- Invalid registry URL error handling
+- Flag precedence over environment variables and config files
+- Multiple flags used together
+- Flags with all command types (get, create, check, config, mode, export)
+- API key vs username/password precedence
+- Mixed authentication method handling
+- Flag help text validation
+- Global flag availability in subcommands
+- Error handling for missing registry URL
+
+**tests/integration/test_flag_precedence.sh:**
+- Environment variables override config file values
+- Command-line flags override environment variables
+- Command-line flags override config file values
+- Full precedence chain testing (flags > env > config)
+- Partial flag overrides (only some values)
+- API key precedence over username/password in all sources
+- Mixed source authentication precedence testing
+- Effective configuration value querying
+- Empty/missing values handling
+- Configuration persistence and restoration
 
 **tests/integration/test_comprehensive.sh:**
 - Orchestrates all individual test suites

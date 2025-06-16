@@ -63,7 +63,7 @@ This command imports subjects and their schemas. By default, it will attempt to 
 all schemas. Use --skip-existing to skip schemas that already exist, or --dry-run to 
 preview the changes without applying them.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		c, err := client.NewClient()
+		c, err := createClientWithFlags()
 		if err != nil {
 			return fmt.Errorf("failed to create client: %w", err)
 		}
@@ -87,7 +87,7 @@ var importSubjectCmd = &cobra.Command{
 
 This command imports a single subject and its schemas from an export file.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		c, err := client.NewClient()
+		c, err := createClientWithFlags()
 		if err != nil {
 			return fmt.Errorf("failed to create client: %w", err)
 		}

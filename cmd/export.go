@@ -71,7 +71,7 @@ var exportSubjectsCmd = &cobra.Command{
 This command exports all subjects and their schemas. By default, only the latest version
 of each schema is exported. Use --all-versions to export all versions.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		c, err := client.NewClient()
+		c, err := createClientWithFlags()
 		if err != nil {
 			return fmt.Errorf("failed to create client: %w", err)
 		}
@@ -107,7 +107,7 @@ var exportSubjectCmd = &cobra.Command{
 By default, only the latest version is exported. Use --all-versions to export all versions.`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		c, err := client.NewClient()
+		c, err := createClientWithFlags()
 		if err != nil {
 			return fmt.Errorf("failed to create client: %w", err)
 		}

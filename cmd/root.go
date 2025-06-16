@@ -10,6 +10,14 @@ var (
 	BuildTime = "unknown"
 )
 
+// Global flag variables
+var (
+	registryURL string
+	user        string
+	pass        string
+	apiKey      string
+)
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "ksr-cli",
@@ -47,4 +55,10 @@ func init() {
 	// Add global flags
 	rootCmd.PersistentFlags().Bool("verbose", false, "Enable verbose logging")
 	rootCmd.PersistentFlags().Bool("insecure", false, "Skip TLS certificate verification")
+
+	// Add authentication and connection flags
+	rootCmd.PersistentFlags().StringVar(&registryURL, "registry-url", "", "Schema Registry instance URL (overrides config)")
+	rootCmd.PersistentFlags().StringVar(&user, "user", "", "Username for authentication (overrides config)")
+	rootCmd.PersistentFlags().StringVar(&pass, "pass", "", "Password for authentication (overrides config)")
+	rootCmd.PersistentFlags().StringVar(&apiKey, "api-key", "", "API key for authentication (overrides config)")
 }

@@ -9,6 +9,9 @@
 *.test
 *.out
 
+# ksr-cli binary for testing
+ksr-cli
+
 # Go module files
 /go.sum
 

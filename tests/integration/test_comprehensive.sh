@@ -28,6 +28,8 @@ TEST_SUITES=(
     "test_import_commands.sh"
     "test_import_export_integration.sh"
     "test_all_versions_flag.sh"
+    "test_command_line_flags.sh"
+    "test_flag_precedence.sh"
 )
 
 echo -e "${CYAN}========================================${NC}"

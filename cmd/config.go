@@ -273,6 +273,17 @@ func initConfig() {
 	viper.SetEnvPrefix("KSR")
 	viper.AutomaticEnv()
 
+	// Explicitly bind environment variables to handle dash-to-underscore conversion
+	viper.BindEnv("registry-url", "KSR_REGISTRY_URL")
+	viper.BindEnv("username", "KSR_USERNAME")
+	viper.BindEnv("password", "KSR_PASSWORD")
+	viper.BindEnv("api-key", "KSR_API_KEY")
+	viper.BindEnv("output", "KSR_OUTPUT")
+	viper.BindEnv("verbose", "KSR_VERBOSE")
+	viper.BindEnv("timeout", "KSR_TIMEOUT")
+	viper.BindEnv("insecure", "KSR_INSECURE")
+	viper.BindEnv("context", "KSR_CONTEXT")
+
 	// Read config file if it exists
 	if err := viper.ReadInConfig(); err != nil {
 		// Config file not found is okay, we'll create it when needed
