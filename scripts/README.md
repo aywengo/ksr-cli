@@ -95,6 +95,67 @@ else
 fi
 ```
 
+### migrate-with-ids.sh
+
+A script for migrating schemas while preserving schema IDs and version numbers using IMPORT mode.
+
+**Features:**
+- Preserves schema IDs across migrations
+- Maintains version history
+- Automatic IMPORT mode management
+- Backup creation before migration
+- Dry-run mode for testing
+- Force mode for overwriting
+- Support for single or all subjects
+- Authentication support
+
+**Usage:**
+```bash
+# Migrate all subjects preserving IDs
+./migrate-with-ids.sh \
+  --source-registry http://source:8081 \
+  --target-registry http://target:8081
+
+# Migrate specific subject
+./migrate-with-ids.sh \
+  --source-registry http://source:8081 \
+  --target-registry http://target:8081 \
+  --subject user-events
+
+# With authentication
+./migrate-with-ids.sh \
+  --source-registry http://source:8081 \
+  --target-registry http://target:8081 \
+  --source-auth "user:password" \
+  --target-auth "api-key"
+
+# Dry run to see what would be migrated
+./migrate-with-ids.sh \
+  --source-registry http://source:8081 \
+  --target-registry http://target:8081 \
+  --dry-run
+
+# Force overwrite existing subjects
+./migrate-with-ids.sh \
+  --source-registry http://source:8081 \
+  --target-registry http://target:8081 \
+  --force
+```
+
+**Options:**
+- `-s, --source-registry URL` - Source registry URL (required)
+- `-t, --target-registry URL` - Target registry URL (required)
+- `-sc, --source-context NAME` - Source context (default: ".")
+- `-tc, --target-context NAME` - Target context (default: ".")
+- `-sa, --source-auth AUTH` - Source auth (user:pass or api-key)
+- `-ta, --target-auth AUTH` - Target auth (user:pass or api-key)
+- `-sub, --subject SUBJECT` - Specific subject to migrate (optional, default: all)
+- `-d, --dry-run` - Show what would be migrated without making changes
+- `-f, --force` - Force migration even if subject exists in target
+- `-b, --backup-dir DIR` - Directory to store backups (default: ./migration-backups)
+- `-v, --verbose` - Enable verbose output
+- `-h, --help` - Show help message
+
 ## Installation
 
 1. Make scripts executable:
@@ -106,6 +167,7 @@ chmod +x scripts/*.sh
 - ksr-cli
 - jq
 - bash 4.0+
+- curl (for migrate-with-ids.sh)
 - comm, sort, grep (standard Unix tools)
 
 ## Use Cases
@@ -127,7 +189,25 @@ if [[ $? -ne 0 ]]; then
 fi
 ```
 
-### 2. Regular Sync Monitoring
+### 2. Disaster Recovery Setup
+
+Set up a disaster recovery site with identical schema IDs:
+
+```bash
+# Initial setup - migrate all schemas preserving IDs
+./migrate-with-ids.sh \
+  --source-registry http://primary:8081 \
+  --target-registry http://dr-site:8081 \
+  --backup-dir /backup/dr-setup
+
+# Verify migration
+./compare-contexts.sh \
+  --source-registry http://primary:8081 \
+  --target-registry http://dr-site:8081 \
+  --detailed
+```
+
+### 3. Regular Sync Monitoring
 
 Schedule regular comparisons to detect schema drift:
 
@@ -150,7 +230,7 @@ if [[ $? -ne 0 ]]; then
 fi
 ```
 
-### 3. Multi-Environment Comparison
+### 4. Multi-Environment Comparison
 
 Compare schemas across multiple environments:
 
@@ -172,7 +252,34 @@ for i in "${!ENVIRONMENTS[@]}"; do
 done
 ```
 
-### 4. Generate Comparison Matrix
+### 5. Environment Cloning
+
+Clone an entire environment with preserved IDs:
+
+```bash
+#!/bin/bash
+# Clone production to a new test environment
+
+SOURCE_ENV="http://prod-registry:8081"
+TARGET_ENV="http://test-registry:8081"
+
+# First, check what will be migrated
+./migrate-with-ids.sh \
+  --source-registry "$SOURCE_ENV" \
+  --target-registry "$TARGET_ENV" \
+  --dry-run
+
+read -p "Proceed with migration? (y/n) " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+  ./migrate-with-ids.sh \
+    --source-registry "$SOURCE_ENV" \
+    --target-registry "$TARGET_ENV" \
+    --backup-dir /backup/env-clone-$(date +%Y%m%d)
+fi
+```
+
+### 6. Generate Comparison Matrix
 
 Create a comprehensive comparison matrix:
 
@@ -284,11 +391,55 @@ Total subjects compared: 10
 }
 ```
 
+### Migration Output
+```
+Schema Migration with ID Preservation
+====================================
+Source: http://source:8081 (context: .)
+Target: http://target:8081 (context: .)
+
+Testing connections...
+  Source: ✓
+  Target: ✓
+
+Checking registry modes...
+  Source mode: READWRITE
+  Target mode: READWRITE
+
+Target registry is not in IMPORT mode
+Setting target registry to IMPORT mode to preserve schema IDs...
+
+Backup directory: ./migration-backups/migration-20250616-120000
+
+Getting subjects to migrate...
+Found 5 subject(s) to migrate
+
+Migrating subject: user-events
+  Setting compatibility: FULL
+  Version 1 (ID: 1001, Type: AVRO)
+    ✓ Successfully registered with ID 1001
+  Version 2 (ID: 1002, Type: AVRO)
+    ✓ Successfully registered with ID 1002
+  ✓ Subject migration complete
+
+Restoring target registry mode to READWRITE
+
+====================================
+Migration Summary
+====================================
+Total subjects: 5
+  Successful: 5
+  Failed: 0
+
+Backup location: ./migration-backups/migration-20250616-120000
+```
+
 ## Tips and Best Practices
 
 1. **Use verbose mode** for troubleshooting:
    ```bash
    ./compare-contexts.sh -s http://dev:8081 -t http://prod:8081 -v
+   ./migrate-with-ids.sh -s http://source:8081 -t http://target:8081 -v
    ```
 
 2. **Save reports** for historical tracking:
@@ -298,13 +449,12 @@ Total subjects compared: 10
    ```
 
 3. **Use exit codes** in automation:
-   - Exit code 0: Contexts are identical
-   - Exit code 1: Differences found
+   - Exit code 0: Success (contexts identical or migration successful)
+   - Exit code 1: Failure (differences found or migration failed)
 
-4. **Combine with other tools**:
+4. **Always test migrations** with dry-run first:
    ```bash
-   # Use with jq for custom analysis
-   ./compare-contexts.sh ... -o json | jq '.subjects | to_entries | map(select(.value.status == "different"))[].key'
+   ./migrate-with-ids.sh ... --dry-run
    ```
 
 5. **Monitor specific subjects**:
@@ -312,6 +462,34 @@ Total subjects compared: 10
    # Check if specific critical subjects are in sync
    ./compare-contexts.sh ... -o json | jq '.subjects["critical-events"].status'
    ```
+
+6. **Backup before migration**:
+   - migrate-with-ids.sh automatically creates backups
+   - Store backups in a safe location
+   - Test restore procedures
+
+## Security Best Practices
+
+1. **Protect credentials**:
+   ```bash
+   # Use environment variables
+   export SOURCE_AUTH="api-key-here"
+   export TARGET_AUTH="api-key-here"
+   
+   ./migrate-with-ids.sh \
+     --source-auth "$SOURCE_AUTH" \
+     --target-auth "$TARGET_AUTH" ...
+   ```
+
+2. **Limit IMPORT mode exposure**:
+   - Only use IMPORT mode during migrations
+   - migrate-with-ids.sh automatically restores original mode
+   - Monitor mode changes in production
+
+3. **Audit migrations**:
+   - Keep migration logs and backups
+   - Document who performed migrations and when
+   - Verify migrations with comparison scripts
 
 ## Contributing
 
@@ -321,3 +499,6 @@ When adding new scripts:
 3. Support common authentication methods
 4. Provide examples in this README
 5. Test with various Schema Registry configurations
+6. Add dry-run mode for destructive operations
+7. Create backups when appropriate
+8. Use colored output for better readability
