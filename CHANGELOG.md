@@ -5,13 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.2.x] - 2025-06-16
+## [0.2.x] - 2025-06-17
 
 ### Added
 - Add `--registry-url` flag to specify the Schema Registry instance URL
 - Add `--user` flag to specify the username for authentication
 - Add `--pass` flag to specify the password for authentication
 - Add `--api-key` flag to specify the API key for authentication
+- Added `test_delete_commands.sh` to the comprehensive test suite in `tests/integration/test_comprehensive.sh`.
+- Add `--version` flag to specify the version number to delete
+- Add `--permanent` flag to specify if the subject should be permanently deleted
+- Add `delete` command to delete subjects, versions, or other resources from the Schema Registry
 
 ## [0.1.x] - 2025-06-15
 
@@ -62,6 +66,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Debian packages for Ubuntu/Debian
 - Binary releases for multiple platforms
 - Automated CI/CD with GitHub Actions
+
 
 [Unreleased]: https://github.com/aywengo/ksr-cli/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/aywengo/ksr-cli/releases/tag/v0.1.0
