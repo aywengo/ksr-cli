@@ -36,10 +36,10 @@ ksr-cli --version
 
 ```bash
 # Download the latest .deb package
-wget https://github.com/aywengo/ksr-cli/releases/latest/download/ksr-cli_0.1.1_amd64.deb
+wget https://github.com/aywengo/ksr-cli/releases/latest/download/ksr-cli_0.2.1_amd64.deb
 
 # Install the package
-sudo dpkg -i ksr-cli_0.1.1_amd64.deb
+sudo dpkg -i ksr-cli_0.2.1_amd64.deb
 
 # Verify installation
 ksr-cli --version
@@ -71,6 +71,49 @@ sudo mv ksr-cli /usr/local/bin/
 # Windows
 # Download ksr-cli-windows-amd64.tar.gz from releases page
 # Extract and add to PATH
+```
+
+### Creating Aliases
+
+If you prefer a shorter command name, you can create aliases for `ksr-cli`. Here's how to set up aliases in different shells:
+
+**Bash:**
+```bash
+# Add to ~/.bashrc or ~/.bash_profile
+alias ksr='ksr-cli'
+alias ksrctl='ksr-cli'
+```
+
+**Zsh:**
+```bash
+# Add to ~/.zshrc
+alias ksr='ksr-cli'
+alias ksrctl='ksr-cli'
+```
+
+**Fish:**
+```bash
+# Add to ~/.config/fish/config.fish
+alias ksr='ksr-cli'
+alias ksrctl='ksr-cli'
+```
+
+After adding the aliases, reload your shell configuration:
+```bash
+# For Bash
+source ~/.bashrc  # or source ~/.bash_profile
+
+# For Zsh
+source ~/.zshrc
+
+# For Fish
+source ~/.config/fish/config.fish
+```
+
+Now you can use either `ksr` or `ksrctl` instead of `ksr-cli`:
+```bash
+ksr --version
+ksrctl subjects list
 ```
 
 ### Build from Source
@@ -119,8 +162,8 @@ sudo make install
 - `ksr-cli subjects list` - List all subjects
 - `ksr-cli schema get SUBJECT [--version VERSION]` - Get schema for a subject
 - `ksr-cli schema register SUBJECT --file schema.avsc` - Register a new schema
-- `ksr-cli schema delete SUBJECT [--version VERSION]` - Delete a schema
-- `ksr-cli subject delete SUBJECT` - Delete a subject and all its schemas
+- `ksr-cli delete subject SUBJECT [--permanent]` - Delete a subject and all its schemas
+- `ksr-cli delete version SUBJECT --version VERSION` - Delete a specific version of a subject
 - `ksr-cli compatibility check SUBJECT --file schema.avsc` - Check schema compatibility
 
 **Configuration Management:**
@@ -129,11 +172,13 @@ sudo make install
 
 **Mode Management:**
 - `ksr-cli mode get [--subject SUBJECT]` - Get mode (READWRITE/READONLY/IMPORT)
-- `ksr-cli mode set MODE [--subject SUBJECT]` - Set mode
+- `ksr-cli set mode MODE [--subject SUBJECT]` - Set mode for Schema Registry
+- `ksr-cli config set context CONTEXT` - Set default context for all commands
+- `ksr-cli config set output FORMAT` - Set default output format (table, json, yaml)
 
 **Context Operations:**
 - `ksr-cli contexts list` - List available contexts
-- All commands support `--context` flag for multi-tenant environments
+- All commands support `--context CONTEXT` flag for multi-tenant environments
 
 **Import/Export Operations:**
 - `ksr-cli export subjects [--all-versions] [-f backup.json]` - Export schemas
@@ -156,6 +201,10 @@ ksr-cli can be configured through multiple methods (in order of precedence):
 --user string          # Username for authentication (overrides config)
 --pass string          # Password for authentication (overrides config)  
 --api-key string       # API key for authentication (overrides config)
+
+# Context and Output
+--context string       # Schema Registry context for multi-tenant environments
+--output string        # Output format (table, json, yaml)
 
 # Other flags
 --verbose              # Enable verbose logging
@@ -187,6 +236,48 @@ export KSR_PASSWORD=mypass
 export KSR_API_KEY=your-api-key
 ```
 
+### Configuration Management
+
+The CLI provides several ways to manage configuration:
+
+1. **Using `config set` command:**
+   ```bash
+   # Set default context
+   ksr-cli config set context production
+
+   # Set default output format
+   ksr-cli config set output json
+
+   # Set registry URL
+   ksr-cli config set registry-url http://localhost:8081
+
+   # Set authentication
+   ksr-cli config set username myuser
+   ksr-cli config set password mypass
+   # OR use API key
+   ksr-cli config set api-key your-api-key
+   ```
+
+2. **Using environment variables:**
+   ```bash
+   export KSR_CONTEXT=production
+   export KSR_OUTPUT=json
+   export KSR_REGISTRY_URL=http://localhost:8081
+   ```
+
+3. **Using configuration file:**
+   ```yaml
+   # ~/.ksr-cli.yaml
+   context: production
+   output: json
+   registry-url: http://localhost:8081
+   ```
+
+The configuration precedence is:
+1. Command-line flags (highest priority)
+2. Environment variables
+3. Configuration file (lowest priority)
+
 ### Working with Schemas
 
 ```bash
@@ -212,10 +303,13 @@ ksr-cli create schema my-subject --file schema.json --schema-type JSON
 ksr-cli check compatibility my-subject --file new-schema.avsc
 
 # Delete a specific version
-ksr-cli set delete my-subject --version 1
+ksr-cli delete version my-subject --version 1 --context production
 
 # Delete entire subject
-ksr-cli set delete my-subject
+ksr-cli delete subject my-subject --context production
+
+# Delete subject permanently
+ksr-cli delete subject my-subject --permanent --context production
 ```
 
 ### Compatibility Management
