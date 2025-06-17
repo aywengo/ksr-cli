@@ -85,4 +85,4 @@ func init() {
 	deleteCmd.PersistentFlags().StringVar(&context, "context", "", "Schema Registry context")
 	deleteCmd.PersistentFlags().StringVar(&version, "version", "", "Version number to delete")
 	deleteCmd.PersistentFlags().BoolVar(&permanent, "permanent", false, "Permanently delete the subject")
-} 
+}
