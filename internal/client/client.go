@@ -484,6 +484,26 @@ func (c *Client) SetSubjectMode(subject, mode, context string) (*Mode, error) {
 	return &result, nil
 }
 
+// DeleteSubjectVersion deletes a specific version of a subject
+func (c *Client) DeleteSubjectVersion(subject string, version int, context string) error {
+	path := fmt.Sprintf("/subjects/%s/versions/%d", url.PathEscape(subject), version)
+	if context != "" {
+		path += "?context=" + url.QueryEscape(context)
+	}
+
+	resp, err := c.makeRequest("DELETE", path, nil)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return c.handleError(resp)
+	}
+
+	return nil
+}
+
 // handleError processes error responses from the Schema Registry
 func (c *Client) handleError(resp *http.Response) error {
 	body, err := io.ReadAll(resp.Body)

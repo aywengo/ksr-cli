@@ -30,6 +30,7 @@ TEST_SUITES=(
     "test_all_versions_flag.sh"
     "test_command_line_flags.sh"
     "test_flag_precedence.sh"
+    "test_delete_commands.sh"
 )
 
 echo -e "${CYAN}========================================${NC}"
