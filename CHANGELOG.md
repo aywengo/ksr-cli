@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `--version` flag to specify the version number to delete
 - Add `--permanent` flag to specify if the subject should be permanently deleted
 - Add `delete` command to delete subjects, versions, or other resources from the Schema Registry
+- Add `describe` command to describe the Schema Registry instance, subjects, versions, and configurations
 
 ## [0.1.x] - 2025-06-15
 

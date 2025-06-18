@@ -22,6 +22,7 @@ TEST_SUITES=(
     "test_check_commands.sh"
     "test_config_commands.sh"
     "test_context_operations.sh"
+    "test_describe_commands.sh"
     "test_schema_evolution.sh"
     "test_mode_commands.sh"
     "test_export_commands.sh"

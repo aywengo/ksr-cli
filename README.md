@@ -135,6 +135,11 @@ sudo make install
 **Connection Check:**
 - `ksr-cli check` - Verify connection to Schema Registry
 
+**Describe Resources:**
+- `ksr-cli describe` - Describe Schema Registry instance (subjects count, contexts, config, mode)
+- `ksr-cli describe --context CONTEXT` - Describe specific context (subjects in context, stats)
+- `ksr-cli describe SUBJECT` - Describe specific subject (versions, fields, suggested commands)
+
 **Schema Operations:**
 - `ksr-cli subjects list` - List all subjects
 - `ksr-cli schema get SUBJECT [--version VERSION]` - Get schema for a subject
@@ -254,6 +259,25 @@ The configuration precedence is:
 1. Command-line flags (highest priority)
 2. Environment variables
 3. Configuration file (lowest priority)
+
+### Describing Resources
+
+```bash
+# Describe Schema Registry instance
+ksr-cli describe
+
+# Describe a specific context
+ksr-cli describe --context production
+
+# Describe a specific subject
+ksr-cli describe my-subject
+
+# Describe subject in a specific context
+ksr-cli describe user-value --context development
+
+# Get description in JSON format
+ksr-cli describe my-subject --output json
+```
 
 ### Working with Schemas
 

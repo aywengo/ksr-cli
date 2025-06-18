@@ -43,6 +43,8 @@ var rootCmd = &cobra.Command{
 including schema management, compatibility checking, and configuration operations.
 
 Examples:
+  %s describe                               # Describe Schema Registry instance
+  %s describe my-subject                    # Describe a specific subject
   %s get subjects                           # List all subjects
   %s get schemas my-subject                 # Get latest schema for subject
   %s create schema my-subject -f schema.avsc  # Register new schema
@@ -52,8 +54,8 @@ Examples:
   %s set mode READONLY                      # Set global mode to read-only
 
 Configuration:
-  Use '%s config' commands to manage your CLI configuration including
-  registry URL, authentication, and default output formats.`, cmdName, cmdName, cmdName, cmdName, cmdName, cmdName, cmdName, cmdName, cmdName),
+  Use 'ksr-cli config' commands to manage your CLI configuration including
+  registry URL, authentication, and default output formats.`, cmdName, cmdName, cmdName, cmdName, cmdName, cmdName, cmdName, cmdName, cmdName, cmdName),
 	Version: Version,
 }
 

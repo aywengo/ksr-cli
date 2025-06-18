@@ -518,3 +518,65 @@ func (c *Client) handleError(resp *http.Response) error {
 
 	return fmt.Errorf("HTTP %d: %s (code: %d)", resp.StatusCode, errorResp.Message, errorResp.ErrorCode)
 }
+
+// Ping checks if the Schema Registry is accessible
+func (c *Client) Ping() error {
+	resp, err := c.makeRequest("GET", "/subjects", nil)
+	if err != nil {
+		return fmt.Errorf("failed to connect to Schema Registry: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return c.handleError(resp)
+	}
+
+	return nil
+}
+
+// GetRegistryInfo returns information about the Schema Registry instance
+func (c *Client) GetRegistryInfo() (*SchemaRegistryInfo, error) {
+	// Try to get the version info - this is a common endpoint
+	resp, err := c.makeRequest("GET", "/", nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get registry info: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusOK {
+		var info SchemaRegistryInfo
+		if err := json.NewDecoder(resp.Body).Decode(&info); err != nil {
+			// If we can't decode the response, return basic info
+			return &SchemaRegistryInfo{}, nil
+		}
+		return &info, nil
+	}
+
+	// If root endpoint doesn't exist, return empty info
+	return &SchemaRegistryInfo{}, nil
+}
+
+// GetContexts returns all available contexts
+func (c *Client) GetContexts() ([]string, error) {
+	resp, err := c.makeRequest("GET", "/contexts", nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get contexts: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNotFound {
+		// If contexts endpoint doesn't exist, return empty list
+		return []string{}, nil
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, c.handleError(resp)
+	}
+
+	var contexts []string
+	if err := json.NewDecoder(resp.Body).Decode(&contexts); err != nil {
+		return nil, fmt.Errorf("failed to decode contexts response: %w", err)
+	}
+
+	return contexts, nil
+}

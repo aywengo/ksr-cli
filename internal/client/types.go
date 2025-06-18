@@ -138,3 +138,42 @@ const (
 	ModeReadOnly  RegistryMode = "READONLY"
 	ModeImport    RegistryMode = "IMPORT"
 )
+
+// RegistryDescription contains comprehensive information about a Schema Registry instance
+type RegistryDescription struct {
+	Info         *SchemaRegistryInfo `json:"info,omitempty"`
+	SubjectCount int                 `json:"subject_count"`
+	Contexts     []string            `json:"contexts,omitempty"`
+	GlobalConfig *Config             `json:"global_config,omitempty"`
+	GlobalMode   *Mode               `json:"global_mode,omitempty"`
+	IsAccessible bool                `json:"is_accessible"`
+	URL          string              `json:"url"`
+}
+
+// ContextDescription contains information about a specific context
+type ContextDescription struct {
+	Name         string   `json:"name"`
+	SubjectCount int      `json:"subject_count"`
+	Subjects     []string `json:"subjects,omitempty"`
+	Config       *Config  `json:"config,omitempty"`
+	Mode         *Mode    `json:"mode,omitempty"`
+}
+
+// SubjectDescription contains comprehensive information about a subject
+type SubjectDescription struct {
+	Name              string   `json:"name"`
+	Versions          []int    `json:"versions,omitempty"`
+	LatestVersion     int      `json:"latest_version,omitempty"`
+	LatestSchema      *Schema  `json:"latest_schema,omitempty"`
+	Config            *Config  `json:"config,omitempty"`
+	Mode              *Mode    `json:"mode,omitempty"`
+	SchemaType        string   `json:"schema_type,omitempty"`
+	FieldCount        int      `json:"field_count,omitempty"`
+	SuggestedCommands []string `json:"suggested_commands,omitempty"`
+}
+
+// SchemaFieldInfo represents information about schema fields (for analysis)
+type SchemaFieldInfo struct {
+	FieldCount int      `json:"field_count"`
+	FieldNames []string `json:"field_names,omitempty"`
+}
