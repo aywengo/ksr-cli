@@ -25,8 +25,11 @@ A comprehensive command-line interface for managing Kafka Schema Registry. Built
 ### Homebrew (macOS and Linux)
 
 ```bash
-# Install ksr-cli
+# Install using the full name
 brew install aywengo/tap/ksr-cli
+
+# Or install using the short name
+brew install aywengo/tap/ksr
 
 # Verify installation
 ksr-cli --version
