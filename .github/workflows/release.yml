@@ -117,11 +117,15 @@ jobs:
         # Fixed: Use proper ldflags syntax with quotes and pass to cmd package variables
         go build -ldflags "-X 'main.Version=$VERSION' -X 'main.BuildTime=$BUILD_TIME' -X 'github.com/aywengo/ksr-cli/cmd.Version=$VERSION' -X 'github.com/aywengo/ksr-cli/cmd.BuildTime=$BUILD_TIME' -s -w" -o ${{ matrix.artifact_name }} .
     
+    - name: Create tarball
+      run: |
+        tar -czf ${{ matrix.asset_name }}.tar.gz ${{ matrix.artifact_name }}
+    
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.asset_name }}
-        path: ${{ matrix.artifact_name }}
+        path: ${{ matrix.asset_name }}.tar.gz
 
   package-deb:
     needs: build
@@ -133,13 +137,21 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: ksr-cli-linux-amd64
-        path: ./bin/amd64/
+    
+    - name: Extract Linux AMD64 binary
+      run: |
+        mkdir -p ./bin/amd64/
+        tar -xzf ksr-cli-linux-amd64.tar.gz -C ./bin/amd64/
     
     - name: Download Linux ARM64 binary
       uses: actions/download-artifact@v4
       with:
         name: ksr-cli-linux-arm64
-        path: ./bin/arm64/
+    
+    - name: Extract Linux ARM64 binary
+      run: |
+        mkdir -p ./bin/arm64/
+        tar -xzf ksr-cli-linux-arm64.tar.gz -C ./bin/arm64/
     
     - name: Get version
       id: version
@@ -244,23 +256,25 @@ jobs:
         VERSION=${GITHUB_REF#refs/tags/v}
         echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
     
-    - name: Create tarballs
+    - name: List downloaded files
       run: |
-        # Create tarballs for each binary
-        for artifact in ksr-cli-*-*; do
-          if [[ -f "$artifact/ksr-cli" || -f "$artifact/ksr-cli.exe" ]]; then
-            cd "$artifact"
-            if [[ -f "ksr-cli.exe" ]]; then
-              tar -czf "../${artifact}.tar.gz" ksr-cli.exe
-            else
-              tar -czf "../${artifact}.tar.gz" ksr-cli
-            fi
-            cd ..
-          fi
+        echo "Current directory contents:"
+        ls -la
+        echo "Contents of each artifact:"
+        for dir in */; do
+          echo "Directory: $dir"
+          ls -la "$dir"
         done
+    
+    - name: Prepare release assets
+      run: |
+        # Move all tarballs to root directory
+        mv ksr-cli-*/*.tar.gz . || true
         
         # List all files for debugging
-        ls -la
+        echo "Files ready for release:"
+        ls -la *.tar.gz
+        ls -la deb-packages/*.deb
     
     - name: Generate checksums
       run: |
@@ -363,12 +377,29 @@ jobs:
         
         cat homebrew-tap/Formula/ksr-cli.rb
     
+    - name: Update ksr.rb formula
+      run: |
+        # Update the ksr.rb formula as well
+        cat > homebrew-tap/Formula/ksr.rb << 'EOF'
+        # This formula is an alias for ksr-cli
+        # Users can install using either:
+        #   brew install aywengo/tap/ksr-cli
+        #   brew install aywengo/tap/ksr
+        
+        require_relative "ksr-cli"
+        
+        class Ksr < KsrCli
+          # Inherit everything from KsrCli
+          # This creates an alias formula that installs the same package
+        end
+        EOF
+    
     - name: Commit and push formula
       working-directory: homebrew-tap
       run: |
         git config user.name "GitHub Actions"
         git config user.email "actions@github.com"
         
-        git add Formula/ksr-cli.rb
+        git add Formula/ksr-cli.rb Formula/ksr.rb
         git commit -m "Update ksr-cli to ${{ github.ref_name }}" || echo "No changes to commit"
         git push
