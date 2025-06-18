@@ -181,6 +181,34 @@ jobs:
          Provides commands to get, create, delete, and manage schemas, subjects, and configurations.
         EOF
           
+          # Create postinst script to create symlink
+          cat > packaging/deb-$arch/ksr-cli-${{ steps.version.outputs.VERSION }}/DEBIAN/postinst << 'EOF'
+        #!/bin/sh
+        set -e
+        
+        if [ "$1" = "configure" ]; then
+            # Create symlink from ksr to ksr-cli
+            ln -sf /usr/bin/ksr-cli /usr/bin/ksr
+        fi
+        
+        #DEBHELPER#
+        EOF
+          chmod 755 packaging/deb-$arch/ksr-cli-${{ steps.version.outputs.VERSION }}/DEBIAN/postinst
+          
+          # Create prerm script to remove symlink
+          cat > packaging/deb-$arch/ksr-cli-${{ steps.version.outputs.VERSION }}/DEBIAN/prerm << 'EOF'
+        #!/bin/sh
+        set -e
+        
+        if [ "$1" = "remove" ] || [ "$1" = "purge" ]; then
+            # Remove symlink
+            rm -f /usr/bin/ksr
+        fi
+        
+        #DEBHELPER#
+        EOF
+          chmod 755 packaging/deb-$arch/ksr-cli-${{ steps.version.outputs.VERSION }}/DEBIAN/prerm
+          
           # Create bash completion
           ./bin/$arch/ksr-cli completion bash > packaging/deb-$arch/ksr-cli-${{ steps.version.outputs.VERSION }}/etc/bash_completion.d/ksr-cli || true
           
@@ -260,11 +288,15 @@ jobs:
           brew install aywengo/tap/ksr-cli
           ```
           
+          After installation, both `ksr-cli` and `ksr` commands will be available.
+          
           ### APT (Ubuntu/Debian)
           ```bash
           wget https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/ksr-cli_${{ steps.version.outputs.VERSION }}_amd64.deb
           sudo dpkg -i ksr-cli_${{ steps.version.outputs.VERSION }}_amd64.deb
           ```
+          
+          After installation, both `ksr-cli` and `ksr` commands will be available.
           
           ### Manual Installation
           Download the appropriate binary for your platform from the assets below.
@@ -298,7 +330,7 @@ jobs:
         VERSION="${{ needs.release.outputs.version }}"
         TAG="${{ github.ref_name }}"
         
-        # Create the formula
+        # Create the formula with symlink support
         cat > homebrew-tap/Formula/ksr-cli.rb << EOF
         class KsrCli < Formula
           desc "CLI tool for Kafka Schema Registry"
@@ -317,10 +349,14 @@ jobs:
           
           def install
             bin.install "ksr-cli"
+            # Create a symlink from ksr to ksr-cli
+            bin.install_symlink "ksr-cli" => "ksr"
           end
           
           test do
             system "#{bin}/ksr-cli", "--help"
+            # Also test the symlink
+            system "#{bin}/ksr", "--help"
           end
         end
         EOF
