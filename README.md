@@ -30,6 +30,9 @@ brew install aywengo/tap/ksr-cli
 
 # Verify installation
 ksr-cli --version
+
+# Both ksr-cli and ksr commands are available
+ksr --version
 ```
 
 ### APT (Ubuntu/Debian)
@@ -43,6 +46,9 @@ sudo dpkg -i ksr-cli_0.2.1_amd64.deb
 
 # Verify installation
 ksr-cli --version
+
+# Both ksr-cli and ksr commands are available
+ksr --version
 ```
 
 ### Manual Installation
@@ -73,47 +79,9 @@ sudo mv ksr-cli /usr/local/bin/
 # Extract and add to PATH
 ```
 
-### Creating Aliases
-
-If you prefer a shorter command name, you can create aliases for `ksr-cli`. Here's how to set up aliases in different shells:
-
-**Bash:**
+Note: With manual installation, only the `ksr-cli` command will be available. To also have the `ksr` shorthand, create a symlink:
 ```bash
-# Add to ~/.bashrc or ~/.bash_profile
-alias ksr='ksr-cli'
-alias ksrctl='ksr-cli'
-```
-
-**Zsh:**
-```bash
-# Add to ~/.zshrc
-alias ksr='ksr-cli'
-alias ksrctl='ksr-cli'
-```
-
-**Fish:**
-```bash
-# Add to ~/.config/fish/config.fish
-alias ksr='ksr-cli'
-alias ksrctl='ksr-cli'
-```
-
-After adding the aliases, reload your shell configuration:
-```bash
-# For Bash
-source ~/.bashrc  # or source ~/.bash_profile
-
-# For Zsh
-source ~/.zshrc
-
-# For Fish
-source ~/.config/fish/config.fish
-```
-
-Now you can use either `ksr` or `ksrctl` instead of `ksr-cli`:
-```bash
-ksr --version
-ksrctl subjects list
+sudo ln -s /usr/local/bin/ksr-cli /usr/local/bin/ksr
 ```
 
 ### Build from Source
@@ -130,6 +98,8 @@ sudo make install
 1. **Check connection to Schema Registry:**
    ```bash
    ksr-cli check
+   # or use the short form
+   ksr check
    ```
 
 2. **Set your Schema Registry URL (if not using default localhost:8081):**
@@ -144,11 +114,15 @@ sudo make install
 3. **List all subjects:**
    ```bash
    ksr-cli subjects list
+   # or
+   ksr subjects list
    ```
 
 4. **Get a schema:**
    ```bash
    ksr-cli schema get my-subject
+   # or
+   ksr schema get my-subject
    ```
 
 ## Usage
