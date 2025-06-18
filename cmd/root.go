@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/spf13/cobra"
 )
 
@@ -18,33 +21,47 @@ var (
 	apiKey      string
 )
 
+// cmdName holds the detected binary name for dynamic examples
+var cmdName = "ksr-cli"
+
+// SetBinaryName sets the command name based on how it was invoked
+func SetBinaryName(name string) {
+	// If the binary is invoked as "ksr", use that in examples
+	// Otherwise default to "ksr-cli"
+	if strings.HasSuffix(name, "ksr") && !strings.HasSuffix(name, "ksr-cli") {
+		cmdName = "ksr"
+	}
+}
+
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "ksr-cli",
+	Use:   cmdName,
 	Short: "Kafka Schema Registry CLI",
-	Long: `A command-line interface for managing Kafka Schema Registry.
+	Long: fmt.Sprintf(`A command-line interface for managing Kafka Schema Registry.
 
-ksr-cli provides a comprehensive set of commands to interact with Confluent Schema Registry,
+%s provides a comprehensive set of commands to interact with Confluent Schema Registry,
 including schema management, compatibility checking, and configuration operations.
 
 Examples:
-  ksr-cli get subjects                           # List all subjects
-  ksr-cli get schemas my-subject                 # Get latest schema for subject
-  ksr-cli create schema my-subject -f schema.avsc  # Register new schema
-  ksr-cli check compatibility my-subject -f new.avsc  # Check compatibility
-  ksr-cli config set registry-url http://localhost:8081  # Configure registry URL
-  ksr-cli get mode                               # Get global mode
-  ksr-cli set mode READONLY                      # Set global mode to read-only
+  %s get subjects                           # List all subjects
+  %s get schemas my-subject                 # Get latest schema for subject
+  %s create schema my-subject -f schema.avsc  # Register new schema
+  %s check compatibility my-subject -f new.avsc  # Check compatibility
+  %s config set registry-url http://localhost:8081  # Configure registry URL
+  %s get mode                               # Get global mode
+  %s set mode READONLY                      # Set global mode to read-only
 
 Configuration:
-  Use 'ksr-cli config' commands to manage your CLI configuration including
-  registry URL, authentication, and default output formats.`,
+  Use '%s config' commands to manage your CLI configuration including
+  registry URL, authentication, and default output formats.`, cmdName, cmdName, cmdName, cmdName, cmdName, cmdName, cmdName, cmdName, cmdName),
 	Version: Version,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() error {
+	// Update the Use field with the detected command name
+	rootCmd.Use = cmdName
 	return rootCmd.Execute()
 }
 
