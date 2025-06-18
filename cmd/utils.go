@@ -87,7 +87,7 @@ func getEffectiveAPIKey() string {
 func createClientWithFlags() (*client.Client, error) {
 	registryURL := getEffectiveRegistryURL()
 	if registryURL == "" {
-		return nil, fmt.Errorf("registry URL is required (use --registry-url flag or configure with 'ksr-cli config set registry-url <url>')")
+		return nil, fmt.Errorf("registry URL is required (use --registry-url flag or configure with '%s config set registry-url <url>')", cmdName)
 	}
 
 	return client.NewClientWithConfig(&client.ClientConfig{
