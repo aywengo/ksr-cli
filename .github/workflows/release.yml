@@ -300,6 +300,8 @@ jobs:
           ### Homebrew (macOS)
           ```bash
           brew install aywengo/tap/ksr-cli
+          # or
+          brew install aywengo/tap/ksr
           ```
           
           After installation, both `ksr-cli` and `ksr` commands will be available.
@@ -335,7 +337,7 @@ jobs:
         curl -L https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/checksums.txt -o checksums.txt
         cat checksums.txt
     
-    - name: Generate Homebrew formula
+    - name: Generate Homebrew formulas
       run: |
         # Extract checksums for Darwin builds
         DARWIN_AMD64_SHA=$(grep "ksr-cli-darwin-amd64.tar.gz" checksums.txt | cut -d' ' -f1)
@@ -344,7 +346,7 @@ jobs:
         VERSION="${{ needs.release.outputs.version }}"
         TAG="${{ github.ref_name }}"
         
-        # Create the formula with symlink support
+        # Create the ksr-cli formula with symlink support
         cat > homebrew-tap/Formula/ksr-cli.rb << EOF
         class KsrCli < Formula
           desc "CLI tool for Kafka Schema Registry"
@@ -375,31 +377,49 @@ jobs:
         end
         EOF
         
-        cat homebrew-tap/Formula/ksr-cli.rb
-    
-    - name: Update ksr.rb formula
-      run: |
-        # Update the ksr.rb formula as well
-        cat > homebrew-tap/Formula/ksr.rb << 'EOF'
-        # This formula is an alias for ksr-cli
-        # Users can install using either:
-        #   brew install aywengo/tap/ksr-cli
-        #   brew install aywengo/tap/ksr
-        
-        require_relative "ksr-cli"
-        
-        class Ksr < KsrCli
-          # Inherit everything from KsrCli
-          # This creates an alias formula that installs the same package
+        # Create the ksr formula as a complete duplicate (not using require_relative)
+        cat > homebrew-tap/Formula/ksr.rb << EOF
+        class Ksr < Formula
+          desc "CLI tool for Kafka Schema Registry"
+          homepage "https://github.com/${{ github.repository }}"
+          version "$VERSION"
+          
+          if OS.mac? && Hardware::CPU.intel?
+            url "https://github.com/${{ github.repository }}/releases/download/$TAG/ksr-cli-darwin-amd64.tar.gz"
+            sha256 "$DARWIN_AMD64_SHA"
+          elsif OS.mac? && Hardware::CPU.arm?
+            url "https://github.com/${{ github.repository }}/releases/download/$TAG/ksr-cli-darwin-arm64.tar.gz"
+            sha256 "$DARWIN_ARM64_SHA"
+          else
+            odie "ksr is only supported on macOS"
+          end
+          
+          def install
+            bin.install "ksr-cli"
+            # Create a symlink from ksr to ksr-cli
+            bin.install_symlink "ksr-cli" => "ksr"
+          end
+          
+          test do
+            system "#{bin}/ksr-cli", "--help"
+            # Also test the symlink
+            system "#{bin}/ksr", "--help"
+          end
         end
         EOF
+        
+        echo "Generated ksr-cli.rb:"
+        cat homebrew-tap/Formula/ksr-cli.rb
+        echo ""
+        echo "Generated ksr.rb:"
+        cat homebrew-tap/Formula/ksr.rb
     
-    - name: Commit and push formula
+    - name: Commit and push formulas
       working-directory: homebrew-tap
       run: |
         git config user.name "GitHub Actions"
         git config user.email "actions@github.com"
         
         git add Formula/ksr-cli.rb Formula/ksr.rb
-        git commit -m "Update ksr-cli to ${{ github.ref_name }}" || echo "No changes to commit"
+        git commit -m "Update ksr-cli and ksr to ${{ github.ref_name }}" || echo "No changes to commit"
         git push
