@@ -16,28 +16,32 @@ var (
 var getCmd = &cobra.Command{
 	Use:   "get",
 	Short: "Get resources from Schema Registry",
-	Long: `Get various resources from the Schema Registry including schemas, subjects, versions, and configurations.
+	Long: func() string {
+		return fmt.Sprintf(`Get various resources from the Schema Registry including schemas, subjects, versions, and configurations.
 
 Examples:
-  ksr-cli get schemas
-  ksr-cli get schemas my-subject
-  ksr-cli get schemas my-subject --version 2
-  ksr-cli get subjects
-  ksr-cli get versions my-subject
-  ksr-cli get config`,
+  %s get schemas
+  %s get schemas my-subject
+  %s get schemas my-subject --version 2
+  %s get subjects
+  %s get versions my-subject
+  %s get config`, cmdName, cmdName, cmdName, cmdName, cmdName, cmdName)
+	}(),
 }
 
 var getSchemasCmd = &cobra.Command{
 	Use:   "schemas [SUBJECT]",
 	Short: "Get schemas",
-	Long: `Get all schemas or a specific schema by subject name.
+	Long: func() string {
+		return fmt.Sprintf(`Get all schemas or a specific schema by subject name.
 
 Examples:
-  ksr-cli get schemas                         # List all subjects
-  ksr-cli get schemas my-subject              # Get latest schema for subject
-  ksr-cli get schemas my-subject -v 2         # Get specific version
-  ksr-cli get schemas my-subject --all        # Get all versions
-  ksr-cli get schemas my-subject --all-versions # Get all versions`,
+  %s get schemas                         # List all subjects
+  %s get schemas my-subject              # Get latest schema for subject
+  %s get schemas my-subject -v 2         # Get specific version
+  %s get schemas my-subject --all        # Get all versions
+  %s get schemas my-subject --all-versions # Get all versions`, cmdName, cmdName, cmdName, cmdName, cmdName)
+	}(),
 	Args: cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c, err := createClientWithFlags()
@@ -136,11 +140,13 @@ var getVersionsCmd = &cobra.Command{
 var getConfigCmd = &cobra.Command{
 	Use:   "config [SUBJECT]",
 	Short: "Get configuration",
-	Long: `Get global configuration or configuration for a specific subject.
+	Long: func() string {
+		return fmt.Sprintf(`Get global configuration or configuration for a specific subject.
 
 Examples:
-  ksr-cli get config           # Get global configuration
-  ksr-cli get config my-subject # Get subject-specific configuration`,
+  %s get config           # Get global configuration
+  %s get config my-subject # Get subject-specific configuration`, cmdName, cmdName)
+	}(),
 	Args: cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c, err := createClientWithFlags()
@@ -173,7 +179,8 @@ Examples:
 var getModeCmd = &cobra.Command{
 	Use:   "mode [SUBJECT]",
 	Short: "Get mode configuration",
-	Long: `Get global mode or mode for a specific subject.
+	Long: func() string {
+		return fmt.Sprintf(`Get global mode or mode for a specific subject.
 
 The mode controls the behavior of the Schema Registry:
 - READWRITE: Normal operation (default)
@@ -181,8 +188,9 @@ The mode controls the behavior of the Schema Registry:
 - IMPORT: Schema Registry is in import mode
 
 Examples:
-  ksr-cli get mode           # Get global mode
-  ksr-cli get mode my-subject # Get subject-specific mode`,
+  %s get mode           # Get global mode
+  %s get mode my-subject # Get subject-specific mode`, cmdName, cmdName)
+	}(),
 	Args: cobra.MaximumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		c, err := createClientWithFlags()
