@@ -536,24 +536,62 @@ func (c *Client) Ping() error {
 
 // GetRegistryInfo returns information about the Schema Registry instance
 func (c *Client) GetRegistryInfo() (*SchemaRegistryInfo, error) {
-	// Try to get the version info - this is a common endpoint
-	resp, err := c.makeRequest("GET", "/", nil)
+	info := &SchemaRegistryInfo{}
+
+	// Get version and commit info
+	version, err := c.GetMetadataVersion()
+	if err == nil {
+		info.Version = version.Version
+		info.Commit = version.CommitID
+	}
+
+	// Get kafka cluster ID
+	metadata, err := c.GetMetadataID()
+	if err == nil {
+		info.KafkaClusterID = metadata.Scope.Clusters.KafkaCluster
+	}
+
+	return info, nil
+}
+
+// GetMetadataVersion returns version and commit information from /v1/metadata/version
+func (c *Client) GetMetadataVersion() (*MetadataVersion, error) {
+	resp, err := c.makeRequest("GET", "/v1/metadata/version", nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get registry info: %w", err)
+		return nil, fmt.Errorf("failed to get metadata version: %w", err)
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode == http.StatusOK {
-		var info SchemaRegistryInfo
-		if err := json.NewDecoder(resp.Body).Decode(&info); err != nil {
-			// If we can't decode the response, return basic info
-			return &SchemaRegistryInfo{}, nil
-		}
-		return &info, nil
+	if resp.StatusCode != http.StatusOK {
+		return nil, c.handleError(resp)
 	}
 
-	// If root endpoint doesn't exist, return empty info
-	return &SchemaRegistryInfo{}, nil
+	var version MetadataVersion
+	if err := json.NewDecoder(resp.Body).Decode(&version); err != nil {
+		return nil, fmt.Errorf("failed to decode metadata version response: %w", err)
+	}
+
+	return &version, nil
+}
+
+// GetMetadataID returns cluster information from /v1/metadata/id
+func (c *Client) GetMetadataID() (*MetadataID, error) {
+	resp, err := c.makeRequest("GET", "/v1/metadata/id", nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get metadata id: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, c.handleError(resp)
+	}
+
+	var metadata MetadataID
+	if err := json.NewDecoder(resp.Body).Decode(&metadata); err != nil {
+		return nil, fmt.Errorf("failed to decode metadata id response: %w", err)
+	}
+
+	return &metadata, nil
 }
 
 // GetContexts returns all available contexts

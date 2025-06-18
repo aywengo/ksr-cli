@@ -52,7 +52,7 @@ echo -e "${GREEN}✓ Test data created successfully${NC}"
 # Test 1: Describe Schema Registry instance (basic registry info)
 echo -e "${YELLOW}[TEST] Describe Schema Registry instance...${NC}"
 REGISTRY_DESCRIBE_OUTPUT=$($CLI describe --output json)
-if echo "$REGISTRY_DESCRIBE_OUTPUT" | python3 -c "import sys, json; data=json.load(sys.stdin); exit(0 if 'url' in data and 'is_accessible' in data and 'subject_count' in data else 1)" 2>/dev/null; then
+if echo "$REGISTRY_DESCRIBE_OUTPUT" | python3 -c "import sys, json; data=json.load(sys.stdin); exit(0 if 'url' in data and 'is_accessible' in data and 'subject_count' in data and 'info' in data else 1)" 2>/dev/null; then
     echo -e "${GREEN}✓ PASSED: Registry description contains required fields${NC}"
 else
     echo -e "${RED}✗ FAILED: Registry description missing required fields${NC}"
@@ -78,6 +78,20 @@ if [ "$SUBJECT_COUNT" -ge 0 ]; then
     echo -e "${GREEN}✓ PASSED: Subject count retrieved: $SUBJECT_COUNT${NC}"
 else
     echo -e "${RED}✗ FAILED: Invalid subject count${NC}"
+    exit 1
+fi
+
+# Test 3a: Check registry version information
+echo -e "${YELLOW}[TEST] Check registry version information...${NC}"
+REGISTRY_VERSION=$(echo "$REGISTRY_DESCRIBE_OUTPUT" | python3 -c "import sys, json; data=json.load(sys.stdin); info=data.get('info', {}); print(info.get('version', ''))")
+REGISTRY_COMMIT=$(echo "$REGISTRY_DESCRIBE_OUTPUT" | python3 -c "import sys, json; data=json.load(sys.stdin); info=data.get('info', {}); print(info.get('commit', ''))")
+KAFKA_CLUSTER_ID=$(echo "$REGISTRY_DESCRIBE_OUTPUT" | python3 -c "import sys, json; data=json.load(sys.stdin); info=data.get('info', {}); print(info.get('kafka_cluster_id', ''))")
+
+if [ -n "$REGISTRY_VERSION" ] && [ -n "$REGISTRY_COMMIT" ] && [ -n "$KAFKA_CLUSTER_ID" ]; then
+    echo -e "${GREEN}✓ PASSED: Registry metadata detected - Version: $REGISTRY_VERSION, Commit: ${REGISTRY_COMMIT:0:7}..., Kafka Cluster: ${KAFKA_CLUSTER_ID:0:7}...${NC}"
+else
+    echo -e "${RED}✗ FAILED: Registry metadata missing${NC}"
+    echo "Version: '$REGISTRY_VERSION', Commit: '$REGISTRY_COMMIT', Kafka Cluster: '$KAFKA_CLUSTER_ID'"
     exit 1
 fi
 

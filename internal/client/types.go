@@ -103,6 +103,23 @@ type SchemaRegistryInfo struct {
 	KafkaClusterID string `json:"kafka_cluster_id,omitempty"`
 }
 
+// MetadataVersion represents the response from /v1/metadata/version
+type MetadataVersion struct {
+	Version  string `json:"version"`
+	CommitID string `json:"commitId"`
+}
+
+// MetadataID represents the response from /v1/metadata/id
+type MetadataID struct {
+	Scope struct {
+		Path     []string `json:"path"`
+		Clusters struct {
+			KafkaCluster          string `json:"kafka-cluster"`
+			SchemaRegistryCluster string `json:"schema-registry-cluster"`
+		} `json:"clusters"`
+	} `json:"scope"`
+}
+
 // SchemaString represents a schema as a string (for parsing)
 type SchemaString struct {
 	Schema string `json:"schema"`
