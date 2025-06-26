@@ -156,6 +156,82 @@ A script for migrating schemas while preserving schema IDs and version numbers u
 - `-v, --verbose` - Enable verbose output
 - `-h, --help` - Show help message
 
+### migrate-schemas-from-list.sh
+
+A wrapper script around `migrate-with-ids.sh` that migrates specific schemas from a text file list, with validation and error handling.
+
+**Features:**
+- Reads schema list from a text file (one schema per line)
+- Validates schema existence in source registry before migration
+- Continues processing on validation errors with warnings
+- Filters out comments and empty lines
+- Removes duplicate entries automatically
+- Detailed reporting of successful, failed, and skipped migrations
+- Supports all migrate-with-ids.sh options
+
+**Usage:**
+```bash
+# Create a schemas list file
+cat > my-schemas.txt << EOF
+user-events
+product-catalog
+order-processing
+payment-notifications
+# This is a comment - will be ignored
+inventory-updates
+EOF
+
+# Migrate schemas from the list
+./migrate-schemas-from-list.sh \
+  --schemas my-schemas.txt \
+  --source-registry http://source:8081 \
+  --target-registry http://target:8081
+
+# With authentication and dry-run
+./migrate-schemas-from-list.sh \
+  --schemas my-schemas.txt \
+  --source-registry http://source:8081 \
+  --target-registry http://target:8081 \
+  --source-auth "user:password" \
+  --target-auth "api-key" \
+  --dry-run \
+  --verbose
+
+# With force mode and custom backup directory
+./migrate-schemas-from-list.sh \
+  --schemas critical-schemas.txt \
+  --source-registry http://source:8081 \
+  --target-registry http://target:8081 \
+  --force \
+  --backup-dir /backups/critical-migration
+```
+
+**Schema List File Format:**
+```txt
+# Comments start with # and are ignored
+user-events
+product-catalog
+order-processing
+
+# Empty lines are ignored too
+payment-notifications
+inventory-updates
+```
+
+**Options:**
+- `--schemas FILE` - Text file containing list of schemas (one per line) (required)
+- `-s, --source-registry URL` - Source registry URL (required)
+- `-t, --target-registry URL` - Target registry URL (required)
+- `-sc, --source-context NAME` - Source context (default: ".")
+- `-tc, --target-context NAME` - Target context (default: ".")
+- `-sa, --source-auth AUTH` - Source auth (user:pass or api-key)
+- `-ta, --target-auth AUTH` - Target auth (user:pass or api-key)
+- `-d, --dry-run` - Show what would be migrated without making changes
+- `-f, --force` - Force migration even if subject exists in target
+- `-b, --backup-dir DIR` - Directory to store backups (default: ./migration-backups)
+- `-v, --verbose` - Enable verbose output
+- `-h, --help` - Show help message
+
 ## Installation
 
 1. Make scripts executable:
@@ -279,7 +355,68 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
 fi
 ```
 
-### 6. Generate Comparison Matrix
+### 6. Selective Schema Migration
+
+Migrate only specific critical schemas from a curated list:
+
+```bash
+#!/bin/bash
+# selective-migration.sh - Migrate only critical production schemas
+
+# Create list of critical schemas
+cat > critical-schemas.txt << EOF
+# Core business events
+user-registration-events
+order-processing-events
+payment-events
+inventory-updates
+
+# Integration schemas
+external-api-requests
+webhook-notifications
+audit-events
+EOF
+
+# First, do a dry run to verify what will be migrated
+echo "=== DRY RUN - Critical Schemas Migration ==="
+./migrate-schemas-from-list.sh \
+  --schemas critical-schemas.txt \
+  --source-registry http://prod-registry:8081 \
+  --target-registry http://dr-registry:8081 \
+  --source-auth "$PROD_API_KEY" \
+  --target-auth "$DR_API_KEY" \
+  --dry-run \
+  --verbose
+
+# Ask for confirmation
+read -p "Proceed with migration? (y/n) " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+  echo "=== EXECUTING - Critical Schemas Migration ==="
+  ./migrate-schemas-from-list.sh \
+    --schemas critical-schemas.txt \
+    --source-registry http://prod-registry:8081 \
+    --target-registry http://dr-registry:8081 \
+    --source-auth "$PROD_API_KEY" \
+    --target-auth "$DR_API_KEY" \
+    --backup-dir /backup/critical-migration-$(date +%Y%m%d) \
+    --verbose
+    
+  # Verify migration success
+  echo "=== VERIFICATION - Comparing migrated schemas ==="
+  for schema in $(grep -v '^#' critical-schemas.txt | grep -v '^[[:space:]]*$'); do
+    echo "Verifying $schema..."
+    ./compare-contexts.sh \
+      -s http://prod-registry:8081 \
+      -t http://dr-registry:8081 \
+      -sa "$PROD_API_KEY" \
+      -ta "$DR_API_KEY" \
+      -o json | jq -r ".subjects[\"$schema\"].status"
+  done
+fi
+```
+
+### 7. Generate Comparison Matrix
 
 Create a comprehensive comparison matrix:
 
@@ -434,6 +571,43 @@ Total subjects: 5
 Backup location: ./migration-backups/migration-20250616-120000
 ```
 
+### List Migration Output
+```
+Schema Migration from List
+=========================
+Schemas file: my-schemas.txt
+Source: http://source:8081 (context: .)
+Target: http://target:8081 (context: .)
+
+Found 6 schema(s) to process from file
+
+Processing schema: user-events
+  ✓ Schema exists in source registry
+  ✓ Migration successful
+
+Processing schema: product-catalog
+  ✓ Schema exists in source registry
+  ✓ Migration successful
+
+Processing schema: non-existent-schema
+  ⚠ Warning: Schema 'non-existent-schema' does not exist in source registry - skipping
+
+Processing schema: order-processing
+  ✓ Schema exists in source registry
+  ✓ Migration successful
+
+=========================
+Migration Summary
+=========================
+Total schemas in file: 6
+  Successful migrations: 3
+  Failed migrations: 0
+  Skipped (not found): 1
+
+Skipped schemas (not found in source):
+non-existent-schema
+```
+
 ## Tips and Best Practices
 
 1. **Use verbose mode** for troubleshooting:
@@ -455,6 +629,7 @@ Backup location: ./migration-backups/migration-20250616-120000
 4. **Always test migrations** with dry-run first:
    ```bash
    ./migrate-with-ids.sh ... --dry-run
+   ./migrate-schemas-from-list.sh ... --dry-run
    ```
 
 5. **Monitor specific subjects**:
@@ -464,9 +639,18 @@ Backup location: ./migration-backups/migration-20250616-120000
    ```
 
 6. **Backup before migration**:
-   - migrate-with-ids.sh automatically creates backups
+   - migrate-with-ids.sh and migrate-schemas-from-list.sh automatically create backups
    - Store backups in a safe location
    - Test restore procedures
+
+7. **Validate schema lists** before migration:
+   ```bash
+   # Check which schemas from your list exist in source
+   ./migrate-schemas-from-list.sh --schemas my-list.txt ... --dry-run
+   
+   # Create schema lists dynamically
+   ksr-cli subjects list --registry-url http://source:8081 | grep "^user-" > user-schemas.txt
+   ```
 
 ## Security Best Practices
 
